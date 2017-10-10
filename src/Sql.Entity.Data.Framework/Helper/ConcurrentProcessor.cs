@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace Yc.Sql.Entity.Data.Core.Framework.Helper
 {
-    public delegate object Method(List<object> methodArguments);
+    public delegate T Method<T>(params dynamic[] methodArguments);
 
     public class ConcurrentProcessor : IConcurrentProcessor
     {
@@ -16,17 +16,17 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Helper
             this.logger = logger;
         }
 
-        public Dictionary<object, object> ExecuteInThreads(Method methodToCall, Dictionary<object, List<object>> threadClassifierCollection,
-                                                            bool enableConcurrentProcessing = false)
+        public Dictionary<dynamic, dynamic> ExecuteInThreads<T>(Method<T> methodToCall, Dictionary<dynamic, dynamic[]> threadClassifierCollection,
+                                                            bool enableConcurrentProcessing)
         {
-            var returnDataCollection = new Dictionary<object, object>();
-            var threadDefinitions = new Dictionary<Thread, State>();
+            var returnDataCollection = new Dictionary<dynamic, dynamic>();
+            var threadDefinitions = new Dictionary<Thread, State<T>>();
             var waitHandles = new List<WaitHandle>();
 
             foreach (var classifier in threadClassifierCollection)
             {
                 var threadState = BuildThreadState(classifier.Key, methodToCall, classifier.Value, ref returnDataCollection);
-                var thread = new Thread(ExecuteSingleThread);
+                var thread = new Thread(ExecuteSingleThread<T>);
                 threadDefinitions.Add(thread, threadState);
             }
 
@@ -48,16 +48,16 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Helper
             return returnDataCollection;
         }
 
-        private void ExecuteSingleThread(object threadState)
+        private void ExecuteSingleThread<T>(dynamic threadState)
         {
-            var resetEvent = ((State)threadState).ThreadResetEvent;
-            var methodToCall = ((State)threadState).MethodToCallInThreads;
-            var methodArguments = ((State)threadState).MethodArguments;
-            var threadKey = ((State)threadState).ThreadKey;
+            var resetEvent = ((State<T>)threadState).ThreadResetEvent;
+            var methodToCall = ((State<T>)threadState).MethodToCallInThreads;
+            var methodArguments = ((State<T>)threadState).MethodArguments;
+            var threadKey = ((State<T>)threadState).ThreadKey;
 
             try
             {
-                ((State)threadState).ReturnDataCollection[threadKey] = methodToCall.Invoke(methodArguments);
+                ((State<T>)threadState).ReturnDataCollection[threadKey] = methodToCall.Invoke(methodArguments);
             }
             catch (Exception exception)
             {
@@ -69,10 +69,10 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Helper
             }
         }
 
-        private static State BuildThreadState(object threadKey, Method methodToCall, List<object> methodArguments,
-                                                ref Dictionary<object, object> returnDataCollection)
+        private static State<T> BuildThreadState<T>(dynamic threadKey, Method<T> methodToCall, dynamic[] methodArguments,
+                                                ref Dictionary<dynamic, dynamic> returnDataCollection)
         {
-            var threadState = new State
+            var threadState = new State<T>
             {
                 ThreadResetEvent = new ManualResetEvent(false),
                 MethodArguments = methodArguments,
@@ -84,18 +84,18 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Helper
             return threadState;
         }
 
-        private class State
+        private class State<T>
         {
-            public List<object> MethodArguments;
-            public object ThreadKey;
-            public Method MethodToCallInThreads;
-            public Dictionary<object, object> ReturnDataCollection;
+            public dynamic[] MethodArguments;
+            public dynamic ThreadKey;
+            public Method<T> MethodToCallInThreads;
+            public Dictionary<dynamic, dynamic> ReturnDataCollection;
             public ManualResetEvent ThreadResetEvent;
         }
     }
 
     public interface IConcurrentProcessor
     {
-        Dictionary<object, object> ExecuteInThreads(Method methodToCall, Dictionary<object, List<object>> threadClassifierCollection, bool enableConcurrentProcessing = false);
+        Dictionary<dynamic, dynamic> ExecuteInThreads<T>(Method<T> methodToCall, Dictionary<object, dynamic[]> threadClassifierCollection, bool enableConcurrentProcessing = true);
     }
 }

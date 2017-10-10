@@ -257,7 +257,7 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Controller
             IDataRequestInfo requestInfo = new DataRequestInfo { CorrelationId = Guid.NewGuid().ToString(), RequestorName = "Faa" };
             dataController = new BaseDataControllerStub(dataMapper.Object, logger.Object);
 
-            List<TestContext> expectedEntity = new List<TestContext> { new TestContext() { Id = 1, Name = "Foo" }, new TestContext() { Id = 2, Name = "Fooo" } };
+            List<IBaseContext> expectedEntity = new List<IBaseContext> { new TestContext() { Id = 1, Name = "Foo" }, new TestContext() { Id = 2, Name = "Fooo" } };
 
             dataMapper.Setup(dm => dm.GetDataItems(entity, typeof(TestContext))).Returns(expectedEntity);
 
@@ -386,7 +386,5 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Controller
     {
         public const string InsertTestData = "InsertTestData";
         public const string InsertTestDatas = "InsertTestDatas";
-        public const string GetById = "GetById";
-        public const string GetAll = "GetAll";
     }
 }

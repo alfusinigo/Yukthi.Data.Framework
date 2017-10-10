@@ -7,6 +7,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using Yc.Sql.Entity.Data.Core.Framework.Cache;
 using Microsoft.Extensions.Logging;
+using Yc.Sql.Entity.Data.Core.Framework.Helper;
 
 namespace Yc.Sql.Entity.Data.Core.Framework.Mapper
 {
@@ -15,6 +16,7 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Mapper
         private IDatabase database;
         private ICacheRepository cacheRepository;
         private ILogger<DataMapperBase> logger;
+        IBinarySerializer serializer;
 
         public event DatabaseMethod OnCallForGetEntity;
         public event DatabaseMethod OnCallForGetEntities;
@@ -25,8 +27,15 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Mapper
             this.cacheRepository = cacheRepository;
             this.logger = logger;
 
+            serializer = new BinarySerializer();
+
             OnCallForGetEntity += MapperBase_OnCallForGetEntity;
             OnCallForGetEntities += MapperBase_OnCallForGetEntities;
+        }
+
+        protected DataMapperBase(IDatabase database, ILogger<DataMapperBase> logger)
+            : this(database, null, logger)
+        {
         }
 
         object MapperBase_OnCallForGetEntities(IBaseContext context, List<IDataParameter> parameterCollection, Type returnEntityType)
@@ -107,20 +116,20 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Mapper
                 if (cacheRepository.ContainsValue(context.Command, context.DependingDbTableNamesInCsv, parameters))
                 {
                     LogDataRetrievalInfo(databaseMethod, context, true);
-                    return cacheRepository[context.Command, context.DependingDbTableNamesInCsv, parameters];
+                    return serializer.ConvertByteArrayToObject(cacheRepository[context.Command, context.DependingDbTableNamesInCsv, parameters]);
                 }
 
                 var callMethod = databaseMethod;
                 var paramCollection = new List<IDataParameter>(parameters);
                 var currentContext = context.Clone();
                 var returnType = returnEntityType;
-                cacheRepository[context.Command, context.DependingDbTableNamesInCsv, parameters] = callMethod(currentContext, paramCollection, returnType);
+                cacheRepository[context.Command, context.DependingDbTableNamesInCsv, parameters] = serializer.ConvertObjectToByteArray(callMethod(currentContext, paramCollection, returnType));
 
                 LogDataRetrievalInfo(databaseMethod, context, false);
-                return cacheRepository[context.Command, context.DependingDbTableNamesInCsv, parameters];
+                return serializer.ConvertByteArrayToObject(cacheRepository[context.Command, context.DependingDbTableNamesInCsv, parameters]);
             }
             LogDataRetrievalInfo(databaseMethod, context, true);
-            return cacheRepository[context.Command, context.DependingDbTableNamesInCsv, parameters];
+            return serializer.ConvertByteArrayToObject(cacheRepository[context.Command, context.DependingDbTableNamesInCsv, parameters]);
         }
 
         private void LogDataRetrievalInfo(DatabaseMethod databaseMethod, IBaseContext context, bool isFromCache)

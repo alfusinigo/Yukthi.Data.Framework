@@ -7,10 +7,11 @@ using System.Collections.Generic;
 using System.Data;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Yc.Sql.Entity.Data.Core.Framework.Cache
 {
-    public class InternalCacheRepository : ICacheRepository
+    public class CacheRepository : ICacheRepository
     {
         protected string getModifiedTimestampQuery = @"WITH TABLENAMES(NAME) AS (
                                                             SELECT NAME = VALUE FROM dbo.CSVTOTABLE('{0}')) 
@@ -25,26 +26,26 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Cache
         protected Dictionary<string, string> HashKeyCache = new Dictionary<string, string>();
         protected Dictionary<string, DateTime> currentTimeStamps = new Dictionary<string, DateTime>();
         protected readonly IDatabase database;
-        private IMemoryCache memoryCache;
-        private MemoryCacheEntryOptions memoryCacheEntryOptions;
-        private IOptions<InternalCacheConfiguration> cacheOptions;
-        private ILogger<InternalCacheRepository> logger;
+        private IDistributedCache cache;
+        private DistributedCacheEntryOptions cacheEntryOptions;
+        private IOptions<CacheConfiguration> cacheOptions;
+        private ILogger<CacheRepository> logger;
 
-        public InternalCacheRepository(IDatabase database, IMemoryCache memoryCache, IOptions<InternalCacheConfiguration> cacheOptions, ILogger<InternalCacheRepository> logger)
+        public CacheRepository(IDatabase database, IDistributedCache cache, IOptions<CacheConfiguration> cacheOptions, ILogger<CacheRepository> logger)
         {
             this.database = database;
-            this.memoryCache = memoryCache;
+            this.cache = cache;
             this.cacheOptions = cacheOptions;
             this.logger = logger;
 
-            memoryCacheEntryOptions = new MemoryCacheEntryOptions();
+            cacheEntryOptions = new DistributedCacheEntryOptions();
 
-            if (cacheOptions.Value.EnableInMemorySlidingExpiration)
-                memoryCacheEntryOptions.SetSlidingExpiration(TimeSpan.FromSeconds(cacheOptions.Value.ExpirationInSeconds));
+            if (cacheOptions.Value.EnableSlidingExpiration)
+                cacheEntryOptions.SetSlidingExpiration(TimeSpan.FromSeconds(cacheOptions.Value.ExpirationInSeconds));
             else 
-                memoryCacheEntryOptions.SetAbsoluteExpiration(TimeSpan.FromSeconds(cacheOptions.Value.ExpirationInSeconds));
+                cacheEntryOptions.SetAbsoluteExpiration(TimeSpan.FromSeconds(cacheOptions.Value.ExpirationInSeconds));
 
-            logger.LogDebug($"InternalCacheOptions:{cacheOptions.Value}");
+            logger.LogDebug($"CacheConfiguration:{cacheOptions.Value}");
         }
 
         protected string GetKey(string commandText, IEnumerable<IDataParameter> parameterCollection)
@@ -80,9 +81,12 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Cache
             return Convert.IsDBNull(latestModifiedTimeStamp) ? DateTime.MinValue : Convert.ToDateTime(latestModifiedTimeStamp);
         }
 
-        protected bool ContainsValue(string key, out object value, string commandText, string dependantTableNamesCsv)
+        protected bool ContainsValue(string key, out byte[] value, string commandText, string dependantTableNamesCsv)
         {
-            var isFound = memoryCache.TryGetValue(key, out value);
+            value = cache.Get(key);
+
+            var isFound = value != null;
+
             if (cacheOptions.Value.EnableDatabaseChangeRefresh
                 && isFound
                 && database != null
@@ -105,11 +109,11 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Cache
             return isFound && value != null;
         }
 
-        public object this[string commandText, string dependantTableNamesCsv, IEnumerable<IDataParameter> parameterCollection]
+        public byte[] this[string commandText, string dependantTableNamesCsv, IEnumerable<IDataParameter> parameterCollection]
         {
             get
             {
-                object value;
+                byte[] value;
                 var key = GetKey(commandText, parameterCollection);
                 logger.LogDebug($"Retrieving data from cache, key:{key}");
                 ContainsValue(key, out value, commandText, dependantTableNamesCsv);
@@ -119,13 +123,13 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Cache
             {
                 var key = GetKey(commandText, parameterCollection);
                 logger.LogDebug($"Setting data to cache, key:{key}");
-                memoryCache.Set(key, value, memoryCacheEntryOptions);
+                cache.Set(key, value, cacheEntryOptions);
                 if (cacheOptions.Value.EnableDatabaseChangeRefresh)
                     currentTimeStamps[key] = DateTime.Now;
             }
         }
 
-        public object this[string commandText, IEnumerable<IDataParameter> parameterCollection]
+        public byte[] this[string commandText, IEnumerable<IDataParameter> parameterCollection]
         {
             get
             {
@@ -139,7 +143,7 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Cache
 
         public bool ContainsValue(string commandText, string dependantTableNamesCsv, IEnumerable<IDataParameter> parameterCollection)
         {
-            object dummyValue;
+            byte[] dummyValue;
             var key = GetKey(commandText, parameterCollection);
             return ContainsValue(key, out dummyValue, commandText, dependantTableNamesCsv);
         }

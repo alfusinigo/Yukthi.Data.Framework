@@ -16,6 +16,8 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Model.Context
     [Serializable]
     public abstract class BaseContext : IBaseContext
     {
+        private IBinarySerializer serializer = new BinarySerializer();
+
         private Dictionary<string, PropertyInfo> currentProperties;
 
         private Dictionary<string, KeyValuePair<object, Type>> dbParameters = new Dictionary<string, KeyValuePair<object, Type>>();
@@ -181,8 +183,8 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Model.Context
 
         public IBaseContext Clone()
         {
-            var actualData = new BinarySerializer().ConvertObjectToByteArray(this);
-            return (IBaseContext)new BinarySerializer().ConvertByteArrayToObject(actualData);
+            var actualData = serializer.ConvertObjectToByteArray(this);
+            return (IBaseContext)serializer.ConvertByteArrayToObject(actualData);
         }
 
         protected string GetDescriptionFromEnumValue(Enum value)
