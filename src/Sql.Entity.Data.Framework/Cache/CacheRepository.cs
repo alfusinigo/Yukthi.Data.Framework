@@ -13,13 +13,6 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Cache
 {
     public class CacheRepository : ICacheRepository
     {
-        protected string getModifiedTimestampQuery = @"WITH TABLENAMES(NAME) AS (
-                                                            SELECT NAME = VALUE FROM dbo.CSVTOTABLE('{0}')) 
-                                                            SELECT MAX(ISNULL(LAST_USER_UPDATE,
-                                                            CONVERT(DATETIME,'1/1/1901'))) FROM sys.dm_db_index_usage_stats S 
-                                                            RIGHT OUTER JOIN TABLENAMES T ON S.OBJECT_ID=OBJECT_ID(T.NAME) 
-                                                            WHERE DATABASE_ID = DB_ID();";
-
         private readonly StringBuilder keyStringBuilder = new StringBuilder();
         private readonly UnicodeEncoding encoding = new UnicodeEncoding();
         private readonly SHA1Managed shaManaged = new SHA1Managed();
@@ -152,5 +145,47 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Cache
         {
             return ContainsValue(commandText, null, parameterCollection);
         }
+
+        protected string getModifiedTimestampQuery = @"IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'dbo.CsvToTable') AND OBJECTPROPERTY(object_id, N'IsTableFunction')=1)
+                                                        BEGIN
+                                                            EXEC( N'CREATE FUNCTION dbo.CsvToTable 
+		                                                        (@CSV varchar(MAX))
+		                                                        RETURNS @valueTable table (value varchar(256), rownum int)
+		                                                        AS
+		                                                        BEGIN
+			                                                        if @CSV <> ''''
+			                                                        BEGIN
+				                                                        declare @seperator char(1)
+				                                                        set @seperator = '',''
+		
+				                                                        declare @sep_position int
+				                                                        declare @arr_val varchar(max)
+				                                                        declare @rowcount int
+				                                                        set @rowcount = 1
+		
+				                                                        if RIGHT(@csv,1) != '',''
+					                                                        set @CSV = @CSV+'',''
+			
+				                                                        while PATINDEX(''%,%'',@csv) <> 0
+				                                                        BEGIN
+					                                                        select @sep_position = PATINDEX(''%,%'', @csv)
+					                                                        select @arr_val = LEFT(@csv, @sep_position - 1)
+					                                                        insert @valueTable values (ltrim(rtrim(@arr_val)), @rowcount)
+					                                                        select @CSV=STUFF(@csv,1,@sep_position,'''')
+					                                                        set @rowcount = @rowcount + 1
+				                                                        END
+			                                                        END
+			                                                        RETURN
+		                                                        END');
+                                                        END
+                                                        GO
+                                                        WITH TABLENAMES(NAME) AS 
+                                                        (
+	                                                        SELECT NAME = VALUE FROM dbo.CSVTOTABLE('DataTransaction,GeneralCode')
+                                                        ) 
+                                                        SELECT MAX(ISNULL(LAST_USER_UPDATE,
+                                                        CONVERT(DATETIME,'1/1/1901'))) FROM sys.dm_db_index_usage_stats S 
+                                                        RIGHT OUTER JOIN TABLENAMES T ON S.OBJECT_ID=OBJECT_ID(T.NAME) 
+                                                        WHERE DATABASE_ID = DB_ID();";
     }
 }

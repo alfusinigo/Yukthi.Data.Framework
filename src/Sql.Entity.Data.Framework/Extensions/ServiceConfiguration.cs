@@ -40,7 +40,7 @@ namespace Yc.Sql.Entity.Data.Framework.Extensions
         /// </summary>
         /// <param name="services"></param>
         /// <param name="configuration"></param>
-        private static void AddDataCaching(this IServiceCollection services, IConfiguration configuration)
+        public static void AddDataCaching(this IServiceCollection services, IConfiguration configuration)
         {
             services.Configure<CacheConfiguration>(
                 options =>

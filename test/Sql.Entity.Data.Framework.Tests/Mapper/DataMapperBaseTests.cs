@@ -13,6 +13,7 @@ using Yc.Sql.Entity.Data.Core.Framework.Model.Controller;
 
 namespace Sql.Entity.Data.Core.Framework.Tests.Mapper
 {
+    //TODO: Add tests for all scenarios
     public class DataMapperBaseTests
     {
         private Mock<IDatabase> database;
@@ -29,9 +30,12 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Mapper
         //[Fact]
         public void Test_GetDataItems()
         {
-            var mapper = new DataMapperBaseStub(database.Object, cacheRepository.Object, logger.Object);
+            //var mapper = new DataMapperBaseStub(database.Object, cacheRepository.Object, logger.Object);
 
-            mapper.GetDataItems(new TestContext() { Id = 1, Name = "Foo", ControllerFunction = TestFunction.GetAll }, typeof(TestContext));
+            //List<IBaseContext> expectedEntity = new List<IBaseContext> { new TestContext() { Id = 1, Name = "Foo" }, new TestContext() { Id = 2, Name = "Fooo" } };
+
+            //database.Setup(db=>db.ExecuteReader)
+            //mapper.GetDataItems(new TestContext() { Id = 1, Name = "Foo", ControllerFunction = TestFunction.GetAll }, typeof(TestContext));
         }
     }
 
@@ -43,6 +47,7 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Mapper
         }
 
         public int GetAllCaseCount { get; set; }
+        public int InsertTestDataCount { get; set; }
 
         public override void SetFunctionSpecificEntityMappings(IBaseContext context)
         {
@@ -51,6 +56,7 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Mapper
                 case TestFunction.InsertTestData:
                     context.Command = "dbo.Insert";
                     context.CommandType = CommandType.StoredProcedure;
+                    InsertTestDataCount++;
                     break;
                 case TestFunction.GetAll:
                     context.Command = "select * from test";

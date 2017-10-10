@@ -16,12 +16,13 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Model.Context
     [Serializable]
     public abstract class BaseContext : IBaseContext
     {
-        private IBinarySerializer serializer = new BinarySerializer();
-
+        [NonSerialized]
         private Dictionary<string, PropertyInfo> currentProperties;
 
+        [NonSerialized]
         private Dictionary<string, KeyValuePair<object, Type>> dbParameters = new Dictionary<string, KeyValuePair<object, Type>>();
 
+        [NonSerialized]
         private int timeout = SqlDatabase.MAX_TIMEOUT;
 
         [JsonIgnore]
@@ -83,7 +84,7 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Model.Context
             Dictionary<string, string> messages;
             if (VerifyMandatoryProperties(GetType(), out messages))
             {
-                SetDataEntitiesFromDerivedMemberProperties(GetType(), typeof (SqlParameterAttribute), dbParameters);
+                SetDataEntitiesFromDerivedMemberProperties(GetType(), typeof(SqlParameterAttribute), dbParameters);
             }
             else
             {
@@ -106,7 +107,7 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Model.Context
                 var functionAttribute = propertyInfo.GetCustomAttributes(false).FirstOrDefault(att => att.GetType() == typeof(FunctionsAttribute));
                 if (functionAttribute == null) continue;
 
-                if(!dataCollection.ContainsKey(name.ToString()) && ((string[])GetCustomAttributeData(functionAttribute)).Contains(ControllerFunction))
+                if (!dataCollection.ContainsKey(name.ToString()) && ((string[])GetCustomAttributeData(functionAttribute)).Contains(ControllerFunction))
                 {
                     dataCollection.Add(name.ToString(), new KeyValuePair<object, Type>(propertyInfo.GetValue(this, null), propertyInfo.PropertyType));
                 }
@@ -120,7 +121,7 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Model.Context
         {
             try
             {
-                if(currentProperties == null)
+                if (currentProperties == null)
                 {
                     currentProperties = new Dictionary<string, PropertyInfo>();
                     var properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
@@ -139,7 +140,7 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Model.Context
                 }
 
                 PropertyInfo property;
-                if(currentProperties.TryGetValue(entityName, out property))
+                if (currentProperties.TryGetValue(entityName, out property))
                 {
                     property.SetValue(this, SafeCastToPropertyType(value, property), null);
                 }
@@ -156,7 +157,7 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Model.Context
                 return Enum.Parse(property.PropertyType, value.ToString());
 
             var t = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
-            if(t.FullName == "System.Byte[]")
+            if (t.FullName == "System.Byte[]")
             {
                 return (value == null) ? null : Convert.ChangeType(value, t);
             }
@@ -183,8 +184,11 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Model.Context
 
         public IBaseContext Clone()
         {
-            var actualData = serializer.ConvertObjectToByteArray(this);
-            return (IBaseContext)serializer.ConvertByteArrayToObject(actualData);
+            using (var serializer = new BinarySerializer())
+            {
+                var actualData = serializer.ConvertObjectToByteArray(this);
+                return (IBaseContext)serializer.ConvertByteArrayToObject(actualData);
+            };
         }
 
         protected string GetDescriptionFromEnumValue(Enum value)
@@ -209,7 +213,7 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Model.Context
                 var functionAttribute = propertyInfo.GetCustomAttributes(false).FirstOrDefault(att => att.GetType() == typeof(FunctionsAttribute));
                 if (functionAttribute == null) continue;
 
-                if (!messages.ContainsKey(name.ToString()) && (mandatoryAttributeData.Item2).Contains(ControllerFunction) &&((string[])GetCustomAttributeData(functionAttribute)).Contains(ControllerFunction) && !CheckIfPropertyIsSet(propertyInfo))
+                if (!messages.ContainsKey(name.ToString()) && (mandatoryAttributeData.Item2).Contains(ControllerFunction) && ((string[])GetCustomAttributeData(functionAttribute)).Contains(ControllerFunction) && !CheckIfPropertyIsSet(propertyInfo))
                 {
                     messages.Add(name.ToString(), string.Format("{0} is not set", name));
                 }
@@ -226,7 +230,7 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Model.Context
             if (propertyInfo.GetValue(this, null) == null)
                 return false;
 
-            if (propertyInfo.PropertyType == typeof (string))
+            if (propertyInfo.PropertyType == typeof(string))
                 return !String.IsNullOrEmpty(Convert.ToString(propertyInfo.GetValue(this, null)).Trim());
 
             if (propertyInfo.PropertyType == typeof(int))
@@ -238,7 +242,7 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Model.Context
             if (propertyInfo.PropertyType == typeof(double))
                 return Convert.ToDouble(propertyInfo.GetValue(this, null)) != default(double);
 
-            if (propertyInfo.PropertyType == typeof (DateTime))
+            if (propertyInfo.PropertyType == typeof(DateTime))
             {
                 return Convert.ToDateTime(propertyInfo.GetValue(this, null)) != DateTime.MinValue;
             }

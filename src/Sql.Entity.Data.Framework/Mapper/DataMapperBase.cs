@@ -27,6 +27,9 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Mapper
             this.cacheRepository = cacheRepository;
             this.logger = logger;
 
+            if (cacheRepository == null)
+                logger.LogWarning("Data caching is disabled, no cache service added!");
+
             serializer = new BinarySerializer();
 
             OnCallForGetEntity += MapperBase_OnCallForGetEntity;

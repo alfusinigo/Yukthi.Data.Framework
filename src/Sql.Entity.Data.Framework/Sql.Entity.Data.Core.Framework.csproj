@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>2.0.1</Version>
+    <Version>2.0.2</Version>
     <AssemblyName>Yc.Sql.Entity.Data.Core.Framework</AssemblyName>
     <RootNamespace>Yc.Sql.Entity.Data.Framework</RootNamespace>
     <PackageId>Yc.Sql.Entity.Data.Core.Framework</PackageId>
@@ -12,7 +12,7 @@
     <Company>YukthiCorp</Company>
     <Description>Wonderful solution of customized data access framework supports SqlServer and .Net Core 2.0 framework</Description>
     <Copyright>Copyright 2017 @YukthiCorp</Copyright>
-    <PackageReleaseNotes>Initial version for .Net Core 2.0</PackageReleaseNotes>
+    <PackageReleaseNotes>Improved version for .Net Core 2.0, Added distributed caching of .Net core</PackageReleaseNotes>
     <PackageTags>Sql Entity Data Core SqlFramework .NetCore</PackageTags>
     <Product>Yc.Sql.Entity.Data.Core.Framework</Product>
   </PropertyGroup>
