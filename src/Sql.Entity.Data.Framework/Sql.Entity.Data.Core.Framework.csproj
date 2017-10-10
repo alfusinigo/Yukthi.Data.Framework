@@ -10,7 +10,8 @@
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <Authors>Jaganathan,Alfus Inigo</Authors>
     <Company>YukthiCorp</Company>
-    <Description>Wonderful solution of customized data access framework supports SqlServer and .Net Core 2.0 framework</Description>
+    <Description>Wonderful solution of customized data access framework supports SqlServer and .Net Core 2.0 framework
+--&gt;Sample API implementation available @https://github.com/alfusinigo/Yukthi.Data.Framework.Api.Sample</Description>
     <Copyright>Copyright 2017 @YukthiCorp</Copyright>
     <PackageReleaseNotes>Improved version for .Net Core 2.0, Added distributed caching of .Net core</PackageReleaseNotes>
     <PackageTags>Sql Entity Data Core SqlFramework .NetCore</PackageTags>
