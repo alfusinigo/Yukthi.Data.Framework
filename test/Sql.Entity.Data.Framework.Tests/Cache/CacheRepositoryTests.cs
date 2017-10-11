@@ -184,6 +184,72 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Cache
             Assert.False(repository.ContainsValue(commandText, parameters));
         }
 
+        [Fact]
+        public void TestGetModifiedTimestampQuery()
+        {
+            var expectedGetModifiedTimestampQuery = @"IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'dbo.CsvToTable') AND OBJECTPROPERTY(object_id, N'IsTableFunction')=1)
+                                                        BEGIN
+                                                            EXEC( N'CREATE FUNCTION dbo.CsvToTable 
+		                                                        (@CSV varchar(MAX))
+		                                                        RETURNS @valueTable table (value varchar(256), rownum int)
+		                                                        AS
+		                                                        BEGIN
+			                                                        if @CSV <> ''''
+			                                                        BEGIN
+				                                                        declare @seperator char(1)
+				                                                        set @seperator = '',''
+		
+				                                                        declare @sep_position int
+				                                                        declare @arr_val varchar(max)
+				                                                        declare @rowcount int
+				                                                        set @rowcount = 1
+		
+				                                                        if RIGHT(@csv,1) != '',''
+					                                                        set @CSV = @CSV+'',''
+			
+				                                                        while PATINDEX(''%,%'',@csv) <> 0
+				                                                        BEGIN
+					                                                        select @sep_position = PATINDEX(''%,%'', @csv)
+					                                                        select @arr_val = LEFT(@csv, @sep_position - 1)
+					                                                        insert @valueTable values (ltrim(rtrim(@arr_val)), @rowcount)
+					                                                        select @CSV=STUFF(@csv,1,@sep_position,'''')
+					                                                        set @rowcount = @rowcount + 1
+				                                                        END
+			                                                        END
+			                                                        RETURN
+		                                                        END');
+                                                        END;
+                                                        
+                                                        WITH TABLENAMES(NAME) AS 
+                                                        (
+	                                                        SELECT NAME = VALUE FROM dbo.CSVTOTABLE('DataTransaction,GeneralCode')
+                                                        ) 
+                                                        SELECT MAX(ISNULL(LAST_USER_UPDATE,
+                                                        CONVERT(DATETIME,'1/1/1901'))) FROM sys.dm_db_index_usage_stats S 
+                                                        RIGHT OUTER JOIN TABLENAMES T ON S.OBJECT_ID=OBJECT_ID(T.NAME) 
+                                                        WHERE DATABASE_ID = DB_ID();";
+
+            cacheOptions = Options.Create(new CacheConfiguration
+            {
+                EnableDatabaseChangeRefresh = false,
+                EnableSlidingExpiration = false,
+                ExpirationInSeconds = 10
+            });
+
+            var repositoryStub = new CacheRepositoryStub(database.Object, memoryCache, cacheOptions, logger.Object);
+
+            Assert.Equal(repositoryStub.GetModifiedTimestampQuery, expectedGetModifiedTimestampQuery);
+        }
+
+    }
+
+    internal class CacheRepositoryStub : CacheRepository
+    {
+        public CacheRepositoryStub(IDatabase database, IDistributedCache cache, IOptions<CacheConfiguration> cacheOptions, ILogger<CacheRepository> logger) : base(database, cache, cacheOptions, logger)
+        {
+        }
+
+        public string GetModifiedTimestampQuery { get { return base.getModifiedTimestampQuery; } }
     }
 
     internal class ExternalTestCache : IDistributedCache

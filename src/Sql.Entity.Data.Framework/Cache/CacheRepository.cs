@@ -177,8 +177,8 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Cache
 			                                                        END
 			                                                        RETURN
 		                                                        END');
-                                                        END
-                                                        GO
+                                                        END;
+                                                        
                                                         WITH TABLENAMES(NAME) AS 
                                                         (
 	                                                        SELECT NAME = VALUE FROM dbo.CSVTOTABLE('DataTransaction,GeneralCode')
