@@ -3,10 +3,11 @@ using Moq;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Text;
+using System.Linq;
 using Xunit;
 using Yc.Sql.Entity.Data.Core.Framework.Access;
 using Yc.Sql.Entity.Data.Core.Framework.Cache;
+using Yc.Sql.Entity.Data.Core.Framework.Helper;
 using Yc.Sql.Entity.Data.Core.Framework.Mapper;
 using Yc.Sql.Entity.Data.Core.Framework.Model.Context;
 using Yc.Sql.Entity.Data.Core.Framework.Model.Controller;
@@ -27,22 +28,192 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Mapper
             logger = new Mock<ILogger<DataMapperBase>>();
         }
 
-        //[Fact]
-        public void Test_GetDataItems()
+        [Fact]
+        public void Test_GetDataItems_WithCacheEnabled_ContainingCachedData()
         {
-            //var mapper = new DataMapperBaseStub(database.Object, cacheRepository.Object, logger.Object);
+            var mapper = new DataMapperBaseStub(database.Object, cacheRepository.Object, logger.Object);
 
-            //List<IBaseContext> expectedEntity = new List<IBaseContext> { new TestContext() { Id = 1, Name = "Foo" }, new TestContext() { Id = 2, Name = "Fooo" } };
+            List<IBaseContext> expectedEntity = new List<IBaseContext> { new TestContext() { Id = 1, Name = "Foo" }, new TestContext() { Id = 2, Name = "Fooo" } };
 
-            //database.Setup(db=>db.ExecuteReader)
-            //mapper.GetDataItems(new TestContext() { Id = 1, Name = "Foo", ControllerFunction = TestFunction.GetAll }, typeof(TestContext));
+            var context = new TestContext() { Id = 1, Name = "Foo", ControllerFunction = TestFunction.GetAll };
+
+            cacheRepository.Setup(c => c.ContainsValue("select * from test", "test", It.IsAny<IEnumerable<IDataParameter>>())).Returns(true);
+
+            cacheRepository.SetupGet(c => c["select * from test", "test", It.IsAny<IEnumerable<IDataParameter>>()]).Returns(new BinarySerializer().ConvertObjectToByteArray(expectedEntity));
+
+            var result = mapper.GetDataItems(context, typeof(TestContext));
+
+            Assert.Equal(mapper.GetAllCaseCount, 1);
+
+            cacheRepository.Verify();
+
+            Assert.NotNull(result);
+
+            Assert.Equal(result.ToList().Count, 2);
+
+            Assert.Equal(((TestContext)result.ToList()[0]).Name, "Foo");
+            Assert.Equal(((TestContext)result.ToList()[0]).Id, 1);
+            Assert.Equal(((TestContext)result.ToList()[1]).Name, "Fooo");
+            Assert.Equal(((TestContext)result.ToList()[1]).Id, 2);
+        }
+
+        //TODO: Mock database & reader
+        //[Fact]
+        public void Test_GetDataItems_WithCacheEnabled_NotContainingCachedData()
+        {
+            var mapper = new DataMapperBaseStub(database.Object, cacheRepository.Object, logger.Object);
+
+            List<IBaseContext> expectedEntity = new List<IBaseContext> { new TestContext() { Id = 1, Name = "Foo" }, new TestContext() { Id = 2, Name = "Fooo" } };
+
+            var context = new TestContext() { Id = 1, Name = "Foo", ControllerFunction = TestFunction.GetAll };
+
+            cacheRepository.Setup(c => c.ContainsValue("select * from test", "test", It.IsAny<IEnumerable<IDataParameter>>())).Returns(true);
+
+            cacheRepository.SetupGet(c => c["select * from test", "test", It.IsAny<IEnumerable<IDataParameter>>()]).Returns(new BinarySerializer().ConvertObjectToByteArray(expectedEntity));
+
+            var result = mapper.GetDataItems(context, typeof(TestContext));
+
+            Assert.Equal(mapper.GetAllCaseCount, 1);
+
+            cacheRepository.Verify();
+
+            Assert.NotNull(result);
+
+            Assert.Equal(result.ToList().Count, 2);
+
+            Assert.Equal(((TestContext)result.ToList()[0]).Name, "Foo");
+            Assert.Equal(((TestContext)result.ToList()[0]).Id, 1);
+            Assert.Equal(((TestContext)result.ToList()[1]).Name, "Fooo");
+            Assert.Equal(((TestContext)result.ToList()[1]).Id, 2);
+        }
+
+        //TODO: Mock database & reader
+        //[Fact]
+        public void Test_GetDataItems_WithoutCacheEnabled()
+        {
+            var mapper = new DataMapperBaseStub(database.Object, logger.Object);
+
+            List<IBaseContext> expectedEntity = new List<IBaseContext> { new TestContext() { Id = 1, Name = "Foo" }, new TestContext() { Id = 2, Name = "Fooo" } };
+
+            var context = new TestContext() { Id = 1, Name = "Foo", ControllerFunction = TestFunction.GetAll };
+
+            cacheRepository.Setup(c => c.ContainsValue("select * from test", "test", It.IsAny<IEnumerable<IDataParameter>>())).Returns(true);
+
+            cacheRepository.SetupGet(c => c["select * from test", "test", It.IsAny<IEnumerable<IDataParameter>>()]).Returns(new BinarySerializer().ConvertObjectToByteArray(expectedEntity));
+
+            var result = mapper.GetDataItems(context, typeof(TestContext));
+
+            Assert.Equal(mapper.GetAllCaseCount, 1);
+
+            cacheRepository.Verify();
+
+            Assert.NotNull(result);
+
+            Assert.Equal(result.ToList().Count, 2);
+
+            Assert.Equal(((TestContext)result.ToList()[0]).Name, "Foo");
+            Assert.Equal(((TestContext)result.ToList()[0]).Id, 1);
+            Assert.Equal(((TestContext)result.ToList()[1]).Name, "Fooo");
+            Assert.Equal(((TestContext)result.ToList()[1]).Id, 2);
+        }
+
+        [Fact]
+        public void Test_GetDataItem_WithCacheEnabled_ContainingCachedData()
+        {
+            var mapper = new DataMapperBaseStub(database.Object, cacheRepository.Object, logger.Object);
+
+            var expectedEntity = new TestContext() { Id = 1, Name = "Foo" };
+
+            var context = new TestContext() { Id = 1, Name = "Foo", ControllerFunction = TestFunction.GetById };
+
+            cacheRepository.Setup(c => c.ContainsValue("select * from test where id=@id", "test", It.IsAny<IEnumerable<IDataParameter>>())).Returns(true);
+
+            cacheRepository.SetupGet(c => c["select * from test where id=@id", "test", It.IsAny<IEnumerable<IDataParameter>>()]).Returns(new BinarySerializer().ConvertObjectToByteArray(expectedEntity));
+
+            var result = mapper.GetDataItem(context, typeof(TestContext));
+
+            Assert.Equal(mapper.GetAllCaseCount, 1);
+
+            cacheRepository.Verify();
+
+            Assert.NotNull(result);
+
+            Assert.Equal(((TestContext)result).Name, "Foo");
+            Assert.Equal(((TestContext)result).Id, 1);
+        }
+
+        //TODO: Mock database & reader
+        //[Fact]
+        public void Test_GetDataItem_WithCacheEnabled_NotContainingCachedData()
+        {
+            var mapper = new DataMapperBaseStub(database.Object, cacheRepository.Object, logger.Object);
+
+            var expectedEntity = new TestContext() { Id = 1, Name = "Foo" };
+
+            var context = new TestContext() { Id = 1, Name = "Foo", ControllerFunction = TestFunction.GetAll };
+
+            cacheRepository.Setup(c => c.ContainsValue("select * from test where id=@id", "test", It.IsAny<IEnumerable<IDataParameter>>())).Returns(true);
+
+            cacheRepository.SetupGet(c => c["select * from test where id=@id", "test", It.IsAny<IEnumerable<IDataParameter>>()]).Returns(new BinarySerializer().ConvertObjectToByteArray(expectedEntity));
+
+            var result = mapper.GetDataItem(context, typeof(TestContext));
+
+            Assert.Equal(mapper.GetAllCaseCount, 1);
+
+            cacheRepository.Verify();
+
+            Assert.NotNull(result);
+
+            Assert.Equal(((TestContext)result).Name, "Foo");
+            Assert.Equal(((TestContext)result).Id, 1);
+        }
+
+        //TODO: Mock database & reader
+        //[Fact]
+        public void Test_GetDataItem_WithoutCacheEnabled()
+        {
+            var mapper = new DataMapperBaseStub(database.Object, cacheRepository.Object, logger.Object);
+
+            var expectedEntity = new TestContext() { Id = 1, Name = "Foo" };
+
+            var context = new TestContext() { Id = 1, Name = "Foo", ControllerFunction = TestFunction.GetAll };
+
+            cacheRepository.Setup(c => c.ContainsValue("select * from test where id=@id", "test", It.IsAny<IEnumerable<IDataParameter>>())).Returns(true);
+
+            cacheRepository.SetupGet(c => c["select * from test where id=@id", "test", It.IsAny<IEnumerable<IDataParameter>>()]).Returns(new BinarySerializer().ConvertObjectToByteArray(expectedEntity));
+
+            var result = mapper.GetDataItem(context, typeof(TestContext));
+
+            Assert.Equal(mapper.GetAllCaseCount, 1);
+
+            cacheRepository.Verify();
+
+            Assert.NotNull(result);
+
+            Assert.Equal(((TestContext)result).Name, "Foo");
+            Assert.Equal(((TestContext)result).Id, 1);
+        }
+
+        [Fact]
+        public void Test_SubmitData_OneDataSet()
+        {
+        }
+
+        [Fact]
+        public void Test_SubmitData_MultipleDataSets()
+        {
         }
     }
 
     internal class DataMapperBaseStub : DataMapperBase
     {
-        public DataMapperBaseStub(IDatabase database, ICacheRepository cacheRepository, ILogger<DataMapperBase> logger) 
+        public DataMapperBaseStub(IDatabase database, ICacheRepository cacheRepository, ILogger<DataMapperBase> logger)
             : base(database, cacheRepository, logger)
+        {
+        }
+
+        public DataMapperBaseStub(IDatabase database, ILogger<DataMapperBase> logger)
+            : base(database, logger)
         {
         }
 
@@ -61,6 +232,13 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Mapper
                 case TestFunction.GetAll:
                     context.Command = "select * from test";
                     context.CommandType = CommandType.Text;
+                    context.DependingDbTableNamesInCsv = "test";
+                    GetAllCaseCount++;
+                    break;
+                case TestFunction.GetById:
+                    context.Command = "select * from test where id=@id";
+                    context.CommandType = CommandType.Text;
+                    context.DependingDbTableNamesInCsv = "test";
                     GetAllCaseCount++;
                     break;
                 default:
@@ -69,6 +247,7 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Mapper
         }
     }
 
+    [Serializable]
     internal class TestContext : BaseContext, ITestContext
     {
         public int Id { get; set; }
