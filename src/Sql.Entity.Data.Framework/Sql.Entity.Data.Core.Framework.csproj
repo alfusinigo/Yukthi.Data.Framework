@@ -3,17 +3,17 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>2.0.3</Version>
+    <Version>2.0.4</Version>
     <AssemblyName>Yc.Sql.Entity.Data.Core.Framework</AssemblyName>
     <RootNamespace>Yc.Sql.Entity.Data.Framework</RootNamespace>
     <PackageId>Yc.Sql.Entity.Data.Core.Framework</PackageId>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <Authors>Jaganathan,Alfus Inigo</Authors>
     <Company>YukthiCorp</Company>
-    <Description>Wonderful solution of customized data access framework which supports SqlServer and .Net Core 2.0 framework. It includes features like dynamic data binding, dynamic parameter binding, distributed caching, etc.
---&gt;Sample API implementation available @https://github.com/alfusinigo/Yukthi.Data.Framework.Api.Sample</Description>
+    <Description>Wonderful solution for customized data access which supports SqlServer and .Net Core 2.0 framework. It includes features like automaticdata binding, automatic parameter binding, distributed caching, etc.
+API implementation available @https://github.com/alfusinigo/Yukthi.Data.Framework.Api.Sample</Description>
     <Copyright>Copyright 2017 @YukthiCorp</Copyright>
-    <PackageReleaseNotes>Issue fix - error when using cache with table dependency</PackageReleaseNotes>
+    <PackageReleaseNotes>Added dynamic datatype support</PackageReleaseNotes>
     <PackageTags>Sql Entity Data Core SqlFramework .NetCore</PackageTags>
     <Product>Yc.Sql.Entity.Data.Core.Framework</Product>
   </PropertyGroup>
