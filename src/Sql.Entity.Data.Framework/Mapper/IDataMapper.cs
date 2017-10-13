@@ -9,16 +9,17 @@ using System.Threading.Tasks;
 
 namespace Yc.Sql.Entity.Data.Core.Framework.Mapper
 {
-    public delegate object DatabaseMethod(IBaseContext context, List<IDataParameter> parameterCollection, Type returnEntityType);
+    public delegate object DatabaseMethod<T>(IBaseContext context, List<IDataParameter> parameterCollection);
+    public delegate dynamic DeserializeMethod<T>(string jsonContent);
 
     public interface IDataMapper
     {
-        IEnumerable<IBaseContext> GetDataItems(IBaseContext context, Type returnEntityType);
-        IBaseContext GetDataItem(IBaseContext context, Type returnEntityType);
+        List<T> GetDataItems<T>(IBaseContext context);
+        T GetDataItem<T>(IBaseContext context);
 
         IDataReader GetReader(IBaseContext context);
 
-        object SubmitData(IBaseContext context);
+        dynamic SubmitData(IBaseContext context);
         void SubmitData(IEnumerable<IBaseContext> entities);
 
         void SetFunctionSpecificEntityMappings(IBaseContext context);

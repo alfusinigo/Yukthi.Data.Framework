@@ -8,7 +8,6 @@ using Yc.Sql.Entity.Data.Core.Framework.Cache;
 
 namespace Yc.Sql.Entity.Data.Core.Framework.Access
 {
-    [Serializable]
     public class SqlDatabase : IDatabase
     {
         public const int MAX_TIMEOUT = 600;

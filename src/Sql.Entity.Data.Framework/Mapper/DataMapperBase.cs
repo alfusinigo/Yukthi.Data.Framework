@@ -8,6 +8,10 @@ using System.Linq;
 using Yc.Sql.Entity.Data.Core.Framework.Cache;
 using Microsoft.Extensions.Logging;
 using Yc.Sql.Entity.Data.Core.Framework.Helper;
+using System.Dynamic;
+using Microsoft.CSharp.RuntimeBinder;
+using System.Diagnostics;
+using Newtonsoft.Json;
 
 namespace Yc.Sql.Entity.Data.Core.Framework.Mapper
 {
@@ -16,10 +20,7 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Mapper
         private IDatabase database;
         private ICacheRepository cacheRepository;
         private ILogger<DataMapperBase> logger;
-        IBinarySerializer serializer;
-
-        public event DatabaseMethod OnCallForGetEntity;
-        public event DatabaseMethod OnCallForGetEntities;
+        private HashSet<string> unsupportedTypes = new HashSet<string>();
 
         protected DataMapperBase(IDatabase database, ICacheRepository cacheRepository, ILogger<DataMapperBase> logger)
         {
@@ -29,11 +30,6 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Mapper
 
             if (cacheRepository == null)
                 logger.LogWarning("Data caching is disabled, no cache service added!");
-
-            serializer = new BinarySerializer();
-
-            OnCallForGetEntity += MapperBase_OnCallForGetEntity;
-            OnCallForGetEntities += MapperBase_OnCallForGetEntities;
         }
 
         protected DataMapperBase(IDatabase database, ILogger<DataMapperBase> logger)
@@ -41,36 +37,38 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Mapper
         {
         }
 
-        object MapperBase_OnCallForGetEntities(IBaseContext context, List<IDataParameter> parameterCollection, Type returnEntityType)
+        public List<T> GetDataItems<T>(IBaseContext context)
         {
-            var reader = GetReader(context);
-            return BuildEntityList(reader, returnEntityType);
+            SetFunctionSpecificEntityMappings(context);
+            return
+                (List<T>)
+                    CheckSetAndReturnValue<T>(MapperBase_OnCallForGetEntities<T>, context, DeserialzeEntities<T>);
         }
 
-        object MapperBase_OnCallForGetEntity(IBaseContext context, List<IDataParameter> parameterCollection, Type returnEntityType)
+        private object MapperBase_OnCallForGetEntities<T>(IBaseContext context, List<IDataParameter> parameterCollection)
         {
             var reader = GetReader(context);
+            return BuildEntityList<T>(reader);
+        }
+
+        private object MapperBase_OnCallForGetEntity<T>(IBaseContext context, List<IDataParameter> parameterCollection)
+        {
+            var reader = GetReader(context);
+            object data = null;
+
             while (reader.Read())
             {
-                return BuildEntity(reader, returnEntityType);
+                data = BuildEntity<T>(reader);
             }
-            return null;
+            return data;
         }
 
-        public IEnumerable<IBaseContext> GetDataItems(IBaseContext context, Type returnEntityType)
+        public T GetDataItem<T>(IBaseContext context)
         {
             SetFunctionSpecificEntityMappings(context);
             return
-                (IEnumerable<IBaseContext>)
-                    CheckSetAndReturnValue(MapperBase_OnCallForGetEntities, context, returnEntityType);
-        }
-
-        public IBaseContext GetDataItem(IBaseContext context, Type returnEntityType)
-        {
-            SetFunctionSpecificEntityMappings(context);
-            return
-                (IBaseContext)
-                    CheckSetAndReturnValue(MapperBase_OnCallForGetEntity, context, returnEntityType);
+                (T)
+                    CheckSetAndReturnValue<T>(MapperBase_OnCallForGetEntity<T>, context, DeserialzeEntity<T>);
         }
 
         public IDataReader GetReader(IBaseContext context)
@@ -85,11 +83,11 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Mapper
                     return database.ExecuteReader(context.Command,
                         context.Timeout, BuildParameters(context));
                 default:
-                    throw new NotImplementedException(context.CommandType.ToString());
+                    throw new NotImplementedException($"CommandType {Enum.GetName(typeof(CommandType),context.CommandType)} is not supported");
             }
         }
 
-        public object SubmitData(IBaseContext context)
+        public dynamic SubmitData(IBaseContext context)
         {
             SetFunctionSpecificEntityMappings(context);
             return database.ExecuteScalar(context.CommandType, context.Command, context.Timeout, BuildParameters(context));
@@ -105,37 +103,41 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Mapper
 
         public abstract void SetFunctionSpecificEntityMappings(IBaseContext context);
 
-        private object CheckSetAndReturnValue(DatabaseMethod databaseMethod, IBaseContext context, Type returnEntityType)
+        private dynamic CheckSetAndReturnValue<T>(DatabaseMethod<T> databaseMethod, IBaseContext context, DeserializeMethod<T> deserializeMethod)
         {
             var parameters = BuildParameters(context);
             if (cacheRepository == null || (context.IsLongRunning && !context.MustCache))
             {
                 LogDataRetrievalInfo(databaseMethod, context, false);
-                return databaseMethod(context, parameters.ToList(), returnEntityType);
+                return databaseMethod(context, parameters.ToList());
             }
 
-            if (!cacheRepository.ContainsValue(context.Command, context.DependingDbTableNamesInCsv, parameters))
-            {
-                if (cacheRepository.ContainsValue(context.Command, context.DependingDbTableNamesInCsv, parameters))
-                {
-                    LogDataRetrievalInfo(databaseMethod, context, true);
-                    return serializer.ConvertByteArrayToObject(cacheRepository[context.Command, context.DependingDbTableNamesInCsv, parameters]);
-                }
+            var typeFullName = typeof(T).FullName;
 
-                var callMethod = databaseMethod;
-                var paramCollection = new List<IDataParameter>(parameters);
-                var currentContext = context.Clone();
-                var returnType = returnEntityType;
-                cacheRepository[context.Command, context.DependingDbTableNamesInCsv, parameters] = serializer.ConvertObjectToByteArray(callMethod(currentContext, paramCollection, returnType));
+            if (!cacheRepository.ContainsValue($"{context.Command}-{typeFullName}", context.DependingDbTableNamesInCsv, parameters))
+            {
+                var data = databaseMethod(context, parameters.ToList());
+                cacheRepository[$"{context.Command}-{typeFullName}", context.DependingDbTableNamesInCsv, parameters] = JsonConvert.SerializeObject(data);
 
                 LogDataRetrievalInfo(databaseMethod, context, false);
-                return serializer.ConvertByteArrayToObject(cacheRepository[context.Command, context.DependingDbTableNamesInCsv, parameters]);
+                return deserializeMethod(cacheRepository[$"{context.Command}-{typeFullName}", context.DependingDbTableNamesInCsv, parameters]);
             }
+
             LogDataRetrievalInfo(databaseMethod, context, true);
-            return serializer.ConvertByteArrayToObject(cacheRepository[context.Command, context.DependingDbTableNamesInCsv, parameters]);
+            return deserializeMethod(cacheRepository[$"{context.Command}-{typeFullName}", context.DependingDbTableNamesInCsv, parameters]);
         }
 
-        private void LogDataRetrievalInfo(DatabaseMethod databaseMethod, IBaseContext context, bool isFromCache)
+        private object DeserialzeEntity<T>(string jsonContent)
+        {
+            return JsonConvert.DeserializeObject<T>(jsonContent);
+        }
+
+        private object DeserialzeEntities<T>(string jsonContent)
+        {
+            return JsonConvert.DeserializeObject<List<T>>(jsonContent);
+        }
+
+        private void LogDataRetrievalInfo<T>(DatabaseMethod<T> databaseMethod, IBaseContext context, bool isFromCache)
         {
             logger.LogDebug($"Mapper-Data returned from {(isFromCache ? "Cache" : "Database")}, Mapper: {GetType().Name}, Context: {context.GetType().Name}, Function: {context.ControllerFunction}");
         }
@@ -145,30 +147,79 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Mapper
             return context.DbParameterContainer.Select(data => new SqlParameter(data.Key, data.Value.Key)).ToArray();
         }
 
-        private IEnumerable<IBaseContext> BuildEntityList(IDataReader reader, Type entityType)
+        private IEnumerable<T> BuildEntityList<T>(IDataReader reader)
         {
-            var entityList = new List<IBaseContext>();
+            var entityList = new List<T>();
             while (reader.Read())
             {
-                entityList.Add(BuildEntity(reader, entityType));
+                entityList.Add(BuildEntity<T>(reader));
             }
+
             return entityList;
         }
 
-        private IBaseContext BuildEntity(IDataReader reader, Type entityType)
+        private T BuildEntity<T>(IDataReader reader)
         {
-            var entity = (IBaseContext)Activator.CreateInstance(entityType);
+            var dynamicEntity = new ExpandoObject();
+            IBaseContext regularEntity = null;
+            bool isBaseContextType = false;
+
+            var typeName = typeof(T).FullName;
+
+            if (!unsupportedTypes.Contains(typeName))
+            {
+                try
+                {
+                    regularEntity = (IBaseContext)Activator.CreateInstance(typeof(T));
+                    isBaseContextType = true;
+                }
+                catch (InvalidCastException)
+                {
+                    unsupportedTypes.Add(typeName);
+                    isBaseContextType = false;
+                }
+                catch (Exception exception)
+                {
+                    throw new NotSupportedException($"Type<T> {typeof(T).FullName} is not supported, either dynamic or IBaseContext implementations are only supported!", exception);
+                }
+            }
+
             for (int i = 0; i < reader.FieldCount; i++)
             {
                 var columnName = reader.GetName(i);
                 var value = reader.GetValue(i);
+                var type = reader.GetFieldType(i);
 
                 if (Convert.IsDBNull(value))
                     continue;
 
-                entity.SetEntityValue(columnName, value);
+                AddProperty(dynamicEntity, columnName, value, type);
+
+                if (isBaseContextType)
+                    regularEntity.SetEntityValue(columnName, value);
             }
-            return entity;
+
+            try
+            {
+                if (!isBaseContextType)
+                    return (dynamic)dynamicEntity;
+            }
+            catch (RuntimeBinderException exception)
+            {
+                throw new NotSupportedException($"Type<T> {typeof(T).FullName} is not supported, either dynamic or IBaseContext implementations are only supported!", exception);
+            }
+
+            return (T)regularEntity;
+        }
+
+        public static void AddProperty(ExpandoObject expando, string propertyName, object propertyValue, Type propertyType)
+        {
+            var expandoDict = expando as IDictionary<string, object>;
+
+            if (expandoDict.ContainsKey(propertyName))
+                expandoDict[propertyName] = propertyValue;
+            else
+                expandoDict.Add(propertyName, propertyValue);
         }
     }
 }

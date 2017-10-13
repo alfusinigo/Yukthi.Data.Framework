@@ -11,8 +11,8 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Controller
 
         IDataResponseInfo SubmitChanges<T>(List<T> entities, IDataRequestInfo requestInfo) where T : IBaseContext;
 
-        IDataResponseInfo GetEntity<T>(T entity, IDataRequestInfo requestInfo) where T : IBaseContext;
+        IDataResponseInfo GetEntity<T>(IBaseContext entity, IDataRequestInfo requestInfo);
 
-        IDataResponseInfo GetEntities<T>(T entity, IDataRequestInfo requestInfo) where T : IBaseContext;
+        IDataResponseInfo GetEntities<T>(IBaseContext entity, IDataRequestInfo requestInfo);
     }
 }

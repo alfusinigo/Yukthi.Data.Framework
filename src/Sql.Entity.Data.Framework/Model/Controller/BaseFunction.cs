@@ -5,7 +5,6 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Model.Controller
     /// <summary>
     /// Can be derived to add more custom functions
     /// </summary>
-    [Serializable]
     public class BaseFunction
     {
         //General Database BaseFunction

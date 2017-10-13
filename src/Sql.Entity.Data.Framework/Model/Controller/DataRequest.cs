@@ -8,7 +8,6 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Model.Controller
         string CorrelationId { get; set; }
     }
 
-    [Serializable]
     public class DataRequestInfo : IDataRequestInfo
     {
         public string RequestorName { get; set; }

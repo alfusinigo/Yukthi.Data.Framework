@@ -58,13 +58,13 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Cache
 
             Assert.False(repository.ContainsValue(commandText, parameters));
 
-            repository[commandText, parameters] = Encoding.UTF8.GetBytes("Sample Data Cached");
+            repository[commandText, parameters] = "Sample Data Cached";
 
             Assert.True(repository.ContainsValue(commandText, parameters));
 
             database.Verify(db => db.ExecuteScalar(It.IsAny<CommandType>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<IDataParameter[]>()), Times.Never);
 
-            Assert.Equal(Encoding.UTF8.GetString(repository[commandText, parameters]), "Sample Data Cached");
+            Assert.Equal(repository[commandText, parameters], "Sample Data Cached");
         }
 
         [Fact]
@@ -84,13 +84,13 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Cache
 
             Assert.False(repository.ContainsValue(commandText, parameters));
 
-            repository[commandText, parameters] = Encoding.UTF8.GetBytes("Sample Data Cached");
+            repository[commandText, parameters] = "Sample Data Cached";
 
             Assert.True(repository.ContainsValue(commandText, parameters));
 
             database.Verify(db => db.ExecuteScalar(It.IsAny<CommandType>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<IDataParameter[]>()), Times.Never);
 
-            Assert.Equal(Encoding.UTF8.GetString(repository[commandText, parameters]), "Sample Data Cached");
+            Assert.Equal(repository[commandText, parameters], "Sample Data Cached");
         }
 
         [Fact]
@@ -110,13 +110,13 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Cache
 
             Assert.False(repository.ContainsValue(commandText, "table1,table2", parameters));
 
-            repository[commandText, "table1,table2", parameters] = Encoding.UTF8.GetBytes("Sample Data Cached");
+            repository[commandText, "table1,table2", parameters] = "Sample Data Cached";
 
             Assert.True(repository.ContainsValue(commandText, "table1,table2", parameters));
 
             database.Verify(db => db.ExecuteScalar(It.Is<CommandType>(val => val == CommandType.Text), It.Is<string>(val => val == string.Format(getModifiedTimestampQuery, "table1,table2")), It.Is<int>(val => val == 0), It.IsAny<IDataParameter[]>()), Times.Never);
 
-            Assert.Equal(Encoding.UTF8.GetString(repository[commandText, parameters]), "Sample Data Cached");
+            Assert.Equal(repository[commandText, parameters], "Sample Data Cached");
         }
 
         [Fact]
@@ -134,13 +134,13 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Cache
 
             repository = new CacheRepository(database.Object, memoryCache, cacheOptions, logger.Object);
 
-            repository[commandText, parameters] = Encoding.UTF8.GetBytes("Sample Data Cached");
+            repository[commandText, parameters] = "Sample Data Cached";
 
             database.Verify(db => db.ExecuteScalar(It.IsAny<CommandType>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<IDataParameter[]>()), Times.Never);
 
             Thread.Sleep(8000);
 
-            Assert.Equal(Encoding.UTF8.GetString(repository[commandText, parameters]), "Sample Data Cached");
+            Assert.Equal(repository[commandText, parameters], "Sample Data Cached");
             Assert.True(repository.ContainsValue(commandText, parameters));
 
             Thread.Sleep(11000);
@@ -164,18 +164,18 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Cache
 
             repository = new CacheRepository(database.Object, memoryCache, cacheOptions, logger.Object);
 
-            repository[commandText, parameters] = Encoding.UTF8.GetBytes("Sample Data Cached");
+            repository[commandText, parameters] = "Sample Data Cached";
 
             database.Verify(db => db.ExecuteScalar(It.IsAny<CommandType>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<IDataParameter[]>()), Times.Never);
 
             Thread.Sleep(8000);
 
-            Assert.Equal(Encoding.UTF8.GetString(repository[commandText, parameters]), "Sample Data Cached");
+            Assert.Equal(repository[commandText, parameters], "Sample Data Cached");
             Assert.True(repository.ContainsValue(commandText, parameters));
 
             Thread.Sleep(8000);
 
-            Assert.Equal(Encoding.UTF8.GetString(repository[commandText, parameters]), "Sample Data Cached");
+            Assert.Equal(repository[commandText, parameters], "Sample Data Cached");
             Assert.True(repository.ContainsValue(commandText, parameters));
 
             Thread.Sleep(11000);

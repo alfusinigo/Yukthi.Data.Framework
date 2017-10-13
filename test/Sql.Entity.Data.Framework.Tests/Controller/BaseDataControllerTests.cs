@@ -87,7 +87,7 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Controller
 
             dataMapper.Setup(dm => dm.SubmitData(entity)).Returns(1);
 
-            IDataResponseInfo responseInfo = dataController.SubmitChanges<TestContext>(entity, requestInfo);
+            IDataResponseInfo responseInfo = dataController.SubmitChanges(entity, requestInfo);
 
             dataMapper.Verify(dm => dm.SubmitData(entity), Times.Once);
 
@@ -115,7 +115,7 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Controller
 
             dataMapper.Setup(dm => dm.SubmitData(It.IsAny<IBaseContext>())).Callback(() => { throw new Exception(); });
 
-            IDataResponseInfo responseInfo = dataController.SubmitChanges<TestContext>(entity, requestInfo);
+            IDataResponseInfo responseInfo = dataController.SubmitChanges(entity, requestInfo);
 
             dataMapper.Verify(dm => dm.SubmitData(entity), Times.Once);
 
@@ -142,7 +142,7 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Controller
 
             dataMapper.Setup(dm => dm.SubmitData(entities));
 
-            IDataResponseInfo responseInfo = dataController.SubmitChanges<TestContext>(entities, requestInfo);
+            IDataResponseInfo responseInfo = dataController.SubmitChanges(entities, requestInfo);
 
             dataMapper.Verify(dm => dm.SubmitData(entities), Times.Exactly(1));
 
@@ -170,7 +170,7 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Controller
 
             dataMapper.Setup(dm => dm.SubmitData(entities)).Callback(() => { throw new Exception(); });
 
-            IDataResponseInfo responseInfo = dataController.SubmitChanges<TestContext>(entities, requestInfo);
+            IDataResponseInfo responseInfo = dataController.SubmitChanges(entities, requestInfo);
 
             dataMapper.Verify(dm => dm.SubmitData(entities), Times.Exactly(1));
 
@@ -197,11 +197,11 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Controller
 
             TestContext expectedEntity = new TestContext() { Id = 1 , Name = "Foo" };
 
-            dataMapper.Setup(dm => dm.GetDataItem(entity, typeof(TestContext))).Returns(expectedEntity);
+            dataMapper.Setup(dm => dm.GetDataItem<TestContext>(entity)).Returns(expectedEntity);
 
-            IDataResponseInfo responseInfo = dataController.GetEntity(entity, requestInfo);
+            IDataResponseInfo responseInfo = dataController.GetEntity<TestContext>(entity, requestInfo);
 
-            dataMapper.Verify(dm => dm.GetDataItem(entity, typeof(TestContext)), Times.Exactly(1));
+            dataMapper.Verify(dm => dm.GetDataItem<TestContext>(entity), Times.Exactly(1));
 
             Assert.Equal(responseInfo.CorrelationId, requestInfo.CorrelationId);
             Assert.Equal(responseInfo.HostName, Environment.MachineName);
@@ -230,11 +230,11 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Controller
 
             TestContext expectedEntity = new TestContext() { Id = 1, Name = "Foo" };
 
-            dataMapper.Setup(dm => dm.GetDataItem(entity, typeof(TestContext))).Returns(expectedEntity).Callback(() => { throw new Exception(); }); 
+            dataMapper.Setup(dm => dm.GetDataItem<TestContext>(entity)).Returns(expectedEntity).Callback(() => { throw new Exception(); }); 
 
-            IDataResponseInfo responseInfo = dataController.GetEntity(entity, requestInfo);
+            IDataResponseInfo responseInfo = dataController.GetEntity<TestContext>(entity, requestInfo);
 
-            dataMapper.Verify(dm => dm.GetDataItem(entity, typeof(TestContext)), Times.Exactly(1));
+            dataMapper.Verify(dm => dm.GetDataItem<TestContext>(entity), Times.Exactly(1));
 
             Assert.Equal(responseInfo.CorrelationId, requestInfo.CorrelationId);
             Assert.Equal(responseInfo.HostName, Environment.MachineName);
@@ -257,13 +257,13 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Controller
             IDataRequestInfo requestInfo = new DataRequestInfo { CorrelationId = Guid.NewGuid().ToString(), RequestorName = "Faa" };
             dataController = new BaseDataControllerStub(dataMapper.Object, logger.Object);
 
-            List<IBaseContext> expectedEntity = new List<IBaseContext> { new TestContext() { Id = 1, Name = "Foo" }, new TestContext() { Id = 2, Name = "Fooo" } };
+            List<TestContext> expectedEntity = new List<TestContext> { new TestContext() { Id = 1, Name = "Foo" }, new TestContext() { Id = 2, Name = "Fooo" } };
 
-            dataMapper.Setup(dm => dm.GetDataItems(entity, typeof(TestContext))).Returns(expectedEntity);
+            dataMapper.Setup(dm => dm.GetDataItems<TestContext>(entity)).Returns(expectedEntity);
 
-            IDataResponseInfo responseInfo = dataController.GetEntities(entity, requestInfo);
+            IDataResponseInfo responseInfo = dataController.GetEntities<TestContext>(entity, requestInfo);
 
-            dataMapper.Verify(dm => dm.GetDataItems(entity, typeof(TestContext)), Times.Exactly(1));
+            dataMapper.Verify(dm => dm.GetDataItems<TestContext>(entity), Times.Exactly(1));
 
             Assert.Equal(responseInfo.CorrelationId, requestInfo.CorrelationId);
             Assert.Equal(responseInfo.HostName, Environment.MachineName);
@@ -294,11 +294,11 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Controller
 
             List<TestContext> expectedEntity = new List<TestContext> { new TestContext() { Id = 1, Name = "Foo" }, new TestContext() { Id = 2, Name = "Fooo" } };
 
-            dataMapper.Setup(dm => dm.GetDataItems(entity, typeof(TestContext))).Returns(expectedEntity).Callback(() => { throw new Exception(); });
+            dataMapper.Setup(dm => dm.GetDataItems<TestContext>(entity)).Returns(expectedEntity).Callback(() => { throw new Exception(); });
 
-            IDataResponseInfo responseInfo = dataController.GetEntities(entity, requestInfo);
+            IDataResponseInfo responseInfo = dataController.GetEntities<TestContext>(entity, requestInfo);
 
-            dataMapper.Verify(dm => dm.GetDataItems(entity, typeof(TestContext)), Times.Exactly(1));
+            dataMapper.Verify(dm => dm.GetDataItems<TestContext>(entity), Times.Exactly(1));
 
             Assert.Equal(responseInfo.CorrelationId, requestInfo.CorrelationId);
             Assert.Equal(responseInfo.HostName, Environment.MachineName);

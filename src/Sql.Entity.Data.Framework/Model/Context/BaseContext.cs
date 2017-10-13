@@ -1,28 +1,22 @@
-﻿using Yc.Sql.Entity.Data.Core.Framework.Model.Controller;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Reflection;
 using Yc.Sql.Entity.Data.Core.Framework.Model.Attributes;
-using Yc.Sql.Entity.Data.Core.Framework.Helper;
 using Yc.Sql.Entity.Data.Core.Framework.Access;
 using System.Xml.Serialization;
 using Newtonsoft.Json;
 
 namespace Yc.Sql.Entity.Data.Core.Framework.Model.Context
 {
-    [Serializable]
     public abstract class BaseContext : IBaseContext
     {
-        [NonSerialized]
         private Dictionary<string, PropertyInfo> currentProperties;
 
-        [NonSerialized]
         private Dictionary<string, KeyValuePair<object, Type>> dbParameters = new Dictionary<string, KeyValuePair<object, Type>>();
 
-        [NonSerialized]
         private int timeout = SqlDatabase.MAX_TIMEOUT;
 
         [JsonIgnore]
@@ -180,15 +174,6 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Model.Context
                 default:
                     throw new NotImplementedException(customAttribute.GetType().Name);
             }
-        }
-
-        public IBaseContext Clone()
-        {
-            using (var serializer = new BinarySerializer())
-            {
-                var actualData = serializer.ConvertObjectToByteArray(this);
-                return (IBaseContext)serializer.ConvertByteArrayToObject(actualData);
-            };
         }
 
         protected string GetDescriptionFromEnumValue(Enum value)

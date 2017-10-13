@@ -64,13 +64,13 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Controller
             return responseInfo;
         }
 
-        public virtual IDataResponseInfo GetEntity<T>(T entity, IDataRequestInfo requestInfo) where T : IBaseContext
+        public virtual IDataResponseInfo GetEntity<T>(IBaseContext entity, IDataRequestInfo requestInfo)
         {
             var responseInfo = new DataResponseInfo();
             try
             {
                 OnStart(this, dataMapper, entity, requestInfo, responseInfo);
-                responseInfo.Data = dataMapper.GetDataItem(entity, typeof(T));
+                responseInfo.Data = dataMapper.GetDataItem<T>(entity);
                 OnCompletion(this, dataMapper, entity, requestInfo);
             }
             catch (Exception exception)
@@ -80,13 +80,13 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Controller
             return responseInfo;
         }
 
-        public IDataResponseInfo GetEntities<T>(T entity, IDataRequestInfo requestInfo) where T : IBaseContext
+        public IDataResponseInfo GetEntities<T>(IBaseContext entity, IDataRequestInfo requestInfo)
         {
             var responseInfo = new DataResponseInfo();
             try
             {
                 OnStart(this, dataMapper, entity, requestInfo, responseInfo);
-                responseInfo.Data = GetCastedCollection<T>(dataMapper.GetDataItems(entity, typeof(T)));
+                responseInfo.Data = GetCastedCollection<T>(dataMapper.GetDataItems<T>(entity));
                 OnCompletion(this, dataMapper, entity, requestInfo);
             }
             catch (Exception exception)
@@ -96,9 +96,9 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Controller
             return responseInfo;
         }
 
-        private IEnumerable<T> GetCastedCollection<T>(IEnumerable<IBaseContext> uncastedData)
+        private IEnumerable<T> GetCastedCollection<T>(IEnumerable<T> uncastedData)
         {
-            var data = uncastedData as List<IBaseContext>;
+            var data = uncastedData.ToList();
             var castedData = new List<T>();
             if (data != null)
                 castedData.AddRange(data.Cast<T>());

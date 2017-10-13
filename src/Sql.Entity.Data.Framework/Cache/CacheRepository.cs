@@ -74,9 +74,9 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Cache
             return Convert.IsDBNull(latestModifiedTimeStamp) ? DateTime.MinValue : Convert.ToDateTime(latestModifiedTimeStamp);
         }
 
-        protected bool ContainsValue(string key, out byte[] value, string commandText, string dependantTableNamesCsv)
+        protected bool ContainsValue(string key, out string value, string commandText, string dependantTableNamesCsv)
         {
-            value = cache.Get(key);
+            value = cache.GetString(key);
 
             var isFound = value != null;
 
@@ -102,11 +102,11 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Cache
             return isFound && value != null;
         }
 
-        public byte[] this[string commandText, string dependantTableNamesCsv, IEnumerable<IDataParameter> parameterCollection]
+        public string this[string commandText, string dependantTableNamesCsv, IEnumerable<IDataParameter> parameterCollection]
         {
             get
             {
-                byte[] value;
+                string value;
                 var key = GetKey(commandText, parameterCollection);
                 logger.LogDebug($"Retrieving data from cache, key:{key}");
                 ContainsValue(key, out value, commandText, dependantTableNamesCsv);
@@ -116,13 +116,13 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Cache
             {
                 var key = GetKey(commandText, parameterCollection);
                 logger.LogDebug($"Setting data to cache, key:{key}");
-                cache.Set(key, value, cacheEntryOptions);
+                cache.SetString(key, value, cacheEntryOptions);
                 if (cacheOptions.Value.EnableDatabaseChangeRefresh)
                     currentTimeStamps[key] = DateTime.Now;
             }
         }
 
-        public byte[] this[string commandText, IEnumerable<IDataParameter> parameterCollection]
+        public string this[string commandText, IEnumerable<IDataParameter> parameterCollection]
         {
             get
             {
@@ -136,7 +136,7 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Cache
 
         public bool ContainsValue(string commandText, string dependantTableNamesCsv, IEnumerable<IDataParameter> parameterCollection)
         {
-            byte[] dummyValue;
+            string dummyValue;
             var key = GetKey(commandText, parameterCollection);
             return ContainsValue(key, out dummyValue, commandText, dependantTableNamesCsv);
         }

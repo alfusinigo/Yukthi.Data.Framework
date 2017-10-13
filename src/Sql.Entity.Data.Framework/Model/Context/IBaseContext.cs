@@ -1,6 +1,4 @@
-﻿using Yc.Sql.Entity.Data.Core.Framework.Access;
-using Yc.Sql.Entity.Data.Core.Framework.Model.Controller;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 
@@ -18,6 +16,5 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Model.Context
         Dictionary<string, KeyValuePair<object, Type>> DbParameterContainer { get; }
         
         void SetEntityValue(string entityName, object value);
-        IBaseContext Clone();      
     }
 }
