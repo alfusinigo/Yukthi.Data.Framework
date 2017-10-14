@@ -34,6 +34,32 @@ namespace Yc.Sql.Entity.Data.Framework.Extensions
             services.AddSingleton<IDatabase, SqlDatabase>();
         }
 
+        public static void AddSqlDatabase(this IServiceCollection services, string connectionString)
+        {
+            services.AddOptions();
+
+            services.Configure<DatabaseConfiguration>(
+                options =>
+                {
+                    options.SqlConnectionString = connectionString;
+                });
+
+            services.AddSingleton<IDatabase, SqlDatabase>();
+        }
+
+        public static void AddSqlDatabase(this IServiceCollection services, DatabaseConfiguration databaseConfiguration)
+        {
+            services.AddOptions();
+
+            services.Configure<DatabaseConfiguration>(
+                options =>
+                {
+                    options = databaseConfiguration;
+                });
+
+            services.AddSingleton<IDatabase, SqlDatabase>();
+        }
+
         /// <summary>
         /// A distributed cache (IDistributedCache) should be implemented
         /// CacheConfiguration: (EnableDatabaseChangeRefresh(false), ExpirationInSeconds(1800), EnableSlidingExpiration(true)), will be binded from appsettings, else defaults will be considered
@@ -48,6 +74,30 @@ namespace Yc.Sql.Entity.Data.Framework.Extensions
                     options.EnableDatabaseChangeRefresh = Convert.ToBoolean(configuration.GetSection("CacheConfiguration:EnableDatabaseChangeRefresh").Value ?? "false");
                     options.ExpirationInSeconds = Convert.ToInt32(configuration.GetSection("CacheConfiguration:ExpirationInSeconds").Value ?? "1800");
                     options.EnableSlidingExpiration = Convert.ToBoolean(configuration.GetSection("CacheConfiguration:EnableSlidingExpiration").Value ?? "true");
+                });
+
+            services.AddSingleton<ICacheRepository, CacheRepository>();
+        }
+
+        public static void AddDataCaching(this IServiceCollection services, bool enableDatabaseChangeRefresh, int expirationInSeconds, bool enableSlidingExpiration)
+        {
+            services.Configure<CacheConfiguration>(
+                options =>
+                {
+                    options.EnableDatabaseChangeRefresh = enableDatabaseChangeRefresh;
+                    options.ExpirationInSeconds = expirationInSeconds;
+                    options.EnableSlidingExpiration = enableSlidingExpiration;
+                });
+
+            services.AddSingleton<ICacheRepository, CacheRepository>();
+        }
+
+        public static void AddDataCaching(this IServiceCollection services, CacheConfiguration cacheConfiguration)
+        {
+            services.Configure<CacheConfiguration>(
+                options =>
+                {
+                    options = cacheConfiguration;
                 });
 
             services.AddSingleton<ICacheRepository, CacheRepository>();
