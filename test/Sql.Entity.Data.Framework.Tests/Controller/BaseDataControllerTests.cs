@@ -28,7 +28,7 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Controller
         {
             IBaseContext entity = new TestContext() { Id = 1, Name = "Foo" };
             entity.ControllerFunction = TestFunction.InsertTestData;
-            IDataRequestInfo requestInfo = new DataRequestInfo { CorrelationId = Guid.NewGuid().ToString(), RequestorName = "Faa" };
+            ICorrelationInfo requestInfo = new CorrelationInfo { CorrelationId = Guid.NewGuid().ToString(), RequestorName = "Faa" };
 
             dataController = new BaseDataControllerStub(dataMapper.Object, logger.Object);
 
@@ -56,7 +56,7 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Controller
         {
             IBaseContext entity = new TestContext() { Id = 1, Name = "Foo" };
             entity.ControllerFunction = TestFunction.InsertTestData;
-            IDataRequestInfo requestInfo = new DataRequestInfo { CorrelationId = Guid.NewGuid().ToString(), RequestorName = "Faa" };
+            ICorrelationInfo requestInfo = new CorrelationInfo { CorrelationId = Guid.NewGuid().ToString(), RequestorName = "Faa" };
 
             dataController = new BaseDataControllerStub(dataMapper.Object, logger.Object);
 
@@ -81,7 +81,7 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Controller
         {
             TestContext entity = new TestContext() { Id = 1, Name = "Foo" };
             entity.ControllerFunction = TestFunction.InsertTestData;
-            IDataRequestInfo requestInfo = new DataRequestInfo { CorrelationId = Guid.NewGuid().ToString(), RequestorName = "Faa" };
+            ICorrelationInfo requestInfo = new CorrelationInfo { CorrelationId = Guid.NewGuid().ToString(), RequestorName = "Faa" };
 
             dataController = new BaseDataControllerStub(dataMapper.Object, logger.Object);
 
@@ -109,7 +109,7 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Controller
         {
             TestContext entity = new TestContext() { Id = 1, Name = "Foo" };
             entity.ControllerFunction = TestFunction.InsertTestData;
-            IDataRequestInfo requestInfo = new DataRequestInfo { CorrelationId = Guid.NewGuid().ToString(), RequestorName = "Faa" };
+            ICorrelationInfo requestInfo = new CorrelationInfo { CorrelationId = Guid.NewGuid().ToString(), RequestorName = "Faa" };
 
             dataController = new BaseDataControllerStub(dataMapper.Object, logger.Object);
 
@@ -136,7 +136,7 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Controller
         {
             List<TestContext> entities = new List<TestContext> { new TestContext() { Id = 1, Name = "Foo", ControllerFunction = TestFunction.InsertTestDatas }, new TestContext() { Id = 2, Name = "Fooo", ControllerFunction = TestFunction.InsertTestDatas } };
 
-            IDataRequestInfo requestInfo = new DataRequestInfo { CorrelationId = Guid.NewGuid().ToString(), RequestorName = "Faa" };
+            ICorrelationInfo requestInfo = new CorrelationInfo { CorrelationId = Guid.NewGuid().ToString(), RequestorName = "Faa" };
 
             dataController = new BaseDataControllerStub(dataMapper.Object, logger.Object);
 
@@ -164,7 +164,7 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Controller
         {
             List<TestContext> entities = new List<TestContext> { new TestContext() { Id = 1, Name = "Foo", ControllerFunction = TestFunction.InsertTestDatas }, new TestContext() { Id = 2, Name = "Fooo", ControllerFunction = TestFunction.InsertTestDatas } };
 
-            IDataRequestInfo requestInfo = new DataRequestInfo { CorrelationId = Guid.NewGuid().ToString(), RequestorName = "Faa" };
+            ICorrelationInfo requestInfo = new CorrelationInfo { CorrelationId = Guid.NewGuid().ToString(), RequestorName = "Faa" };
 
             dataController = new BaseDataControllerStub(dataMapper.Object, logger.Object);
 
@@ -192,7 +192,7 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Controller
             TestContext entity = new TestContext() { Id = 1 };
             entity.ControllerFunction = TestFunction.GetById;
 
-            IDataRequestInfo requestInfo = new DataRequestInfo { CorrelationId = Guid.NewGuid().ToString(), RequestorName = "Faa" };
+            ICorrelationInfo requestInfo = new CorrelationInfo { CorrelationId = Guid.NewGuid().ToString(), RequestorName = "Faa" };
             dataController = new BaseDataControllerStub(dataMapper.Object, logger.Object);
 
             TestContext expectedEntity = new TestContext() { Id = 1 , Name = "Foo" };
@@ -225,7 +225,7 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Controller
             TestContext entity = new TestContext() { Id = 1 };
             entity.ControllerFunction = TestFunction.GetById;
 
-            IDataRequestInfo requestInfo = new DataRequestInfo { CorrelationId = Guid.NewGuid().ToString(), RequestorName = "Faa" };
+            ICorrelationInfo requestInfo = new CorrelationInfo { CorrelationId = Guid.NewGuid().ToString(), RequestorName = "Faa" };
             dataController = new BaseDataControllerStub(dataMapper.Object, logger.Object);
 
             TestContext expectedEntity = new TestContext() { Id = 1, Name = "Foo" };
@@ -254,7 +254,7 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Controller
         {
             TestContext entity = new TestContext() { ControllerFunction = TestFunction.GetAll };
 
-            IDataRequestInfo requestInfo = new DataRequestInfo { CorrelationId = Guid.NewGuid().ToString(), RequestorName = "Faa" };
+            ICorrelationInfo requestInfo = new CorrelationInfo { CorrelationId = Guid.NewGuid().ToString(), RequestorName = "Faa" };
             dataController = new BaseDataControllerStub(dataMapper.Object, logger.Object);
 
             List<TestContext> expectedEntity = new List<TestContext> { new TestContext() { Id = 1, Name = "Foo" }, new TestContext() { Id = 2, Name = "Fooo" } };
@@ -289,7 +289,7 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Controller
         {
             TestContext entity = new TestContext() { ControllerFunction = TestFunction.GetAll };
 
-            IDataRequestInfo requestInfo = new DataRequestInfo { CorrelationId = Guid.NewGuid().ToString(), RequestorName = "Faa" };
+            ICorrelationInfo requestInfo = new CorrelationInfo { CorrelationId = Guid.NewGuid().ToString(), RequestorName = "Faa" };
             dataController = new BaseDataControllerStub(dataMapper.Object, logger.Object);
 
             List<TestContext> expectedEntity = new List<TestContext> { new TestContext() { Id = 1, Name = "Foo" }, new TestContext() { Id = 2, Name = "Fooo" } };
@@ -333,7 +333,7 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Controller
         {
         }
 
-        protected override IDataResponseInfo InitializeResponse(IDataResponseInfo response, IDataRequestInfo request)
+        protected override IDataResponseInfo InitializeResponse(IDataResponseInfo response, ICorrelationInfo request)
         {
             InitializeResponseCount++;
             return base.InitializeResponse(response, request);
@@ -345,25 +345,25 @@ namespace Sql.Entity.Data.Core.Framework.Tests.Controller
             return base.VerifyResponseStatus(response, throwException);
         }
 
-        protected override void OnCompletion(IDataController controller, IDataMapper mapper, IBaseContext context, IDataRequestInfo request)
+        protected override void OnCompletion(IDataController controller, IDataMapper mapper, IBaseContext context, ICorrelationInfo request)
         {
             OnCompletionCount++;
             base.OnCompletion(controller, mapper, context, request);
         }
 
-        protected override void OnCustomMessage(IDataController controller, IDataMapper mapper, IBaseContext context, IDataRequestInfo request, string message)
+        protected override void OnCustomMessage(IDataController controller, IDataMapper mapper, IBaseContext context, ICorrelationInfo request, string message)
         {
             OnCustomMessageCount++;
             base.OnCustomMessage(controller, mapper, context, request, message);
         }
 
-        protected override void OnStart(IDataController controller, IDataMapper mapper, IBaseContext context, IDataRequestInfo request, IDataResponseInfo response)
+        protected override void OnStart(IDataController controller, IDataMapper mapper, IBaseContext context, ICorrelationInfo request, IDataResponseInfo response)
         {
             OnStartCount++;
             base.OnStart(controller, mapper, context, request, response);
         }
 
-        protected override void OnException(IDataController controller, IDataMapper mapper, IBaseContext context, IDataRequestInfo request, IDataResponseInfo response, Exception exception)
+        protected override void OnException(IDataController controller, IDataMapper mapper, IBaseContext context, ICorrelationInfo request, IDataResponseInfo response, Exception exception)
         {
             OnExceptionCount++;
             base.OnException(controller, mapper, context, request, response, exception);

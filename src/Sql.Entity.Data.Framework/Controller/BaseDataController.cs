@@ -28,7 +28,7 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Controller
             this.logger = logger;
         }
 
-        public virtual IDataResponseInfo SubmitChanges<T>(T entity, IDataRequestInfo requestInfo) where T : IBaseContext
+        public virtual IDataResponseInfo SubmitChanges<T>(T entity, ICorrelationInfo requestInfo) where T : IBaseContext
         {
             var responseInfo = new DataResponseInfo();
             try
@@ -44,7 +44,7 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Controller
             return responseInfo;
         }
 
-        public virtual IDataResponseInfo SubmitChanges<T>(List<T> entities, IDataRequestInfo requestInfo) where T : IBaseContext
+        public virtual IDataResponseInfo SubmitChanges<T>(List<T> entities, ICorrelationInfo requestInfo) where T : IBaseContext
         {
             var responseInfo = new DataResponseInfo();
             try
@@ -64,7 +64,7 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Controller
             return responseInfo;
         }
 
-        public virtual IDataResponseInfo GetEntity<T>(IBaseContext entity, IDataRequestInfo requestInfo)
+        public virtual IDataResponseInfo GetEntity<T>(IBaseContext entity, ICorrelationInfo requestInfo)
         {
             var responseInfo = new DataResponseInfo();
             try
@@ -80,7 +80,7 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Controller
             return responseInfo;
         }
 
-        public IDataResponseInfo GetEntities<T>(IBaseContext entity, IDataRequestInfo requestInfo)
+        public IDataResponseInfo GetEntities<T>(IBaseContext entity, ICorrelationInfo requestInfo)
         {
             var responseInfo = new DataResponseInfo();
             try
@@ -105,12 +105,12 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Controller
             return castedData;
         }
 
-        protected internal virtual void OnCustomMessage(IDataController controller, IDataMapper mapper, IBaseContext context, IDataRequestInfo request, string message)
+        protected internal virtual void OnCustomMessage(IDataController controller, IDataMapper mapper, IBaseContext context, ICorrelationInfo request, string message)
         {
             logger.LogDebug($"Message: DataController: {controller.GetType().Name}, DataMapper: {mapper.GetType().Name}, Context: {(context == null ? null : context.GetType().Name)}, CorrelationId: {request.CorrelationId}, Function: {(context == null ? (object)null : context.ControllerFunction)}, User: {request.RequestorName}\n{message}");
         }
 
-        protected internal virtual void OnException(IDataController controller, IDataMapper mapper, IBaseContext context, IDataRequestInfo request, IDataResponseInfo response, Exception exception)
+        protected internal virtual void OnException(IDataController controller, IDataMapper mapper, IBaseContext context, ICorrelationInfo request, IDataResponseInfo response, Exception exception)
         {
             response.Status = Status.Failure;
 
@@ -125,13 +125,13 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Controller
             }
         }
 
-        protected internal virtual void OnStart(IDataController controller, IDataMapper mapper, IBaseContext context, IDataRequestInfo request, IDataResponseInfo response)
+        protected internal virtual void OnStart(IDataController controller, IDataMapper mapper, IBaseContext context, ICorrelationInfo request, IDataResponseInfo response)
         {
             InitializeResponse(response, request);
             logger.LogDebug($"Started: DataController: {controller.GetType().Name}, DataMapper: {mapper.GetType().Name}, Context: {(context == null ? null : context.GetType().Name)}, CorrelationId: {request.CorrelationId}, Function: {(context == null ? (object)null : context.ControllerFunction)}, User: {request.RequestorName}");
         }
 
-        protected internal virtual void OnCompletion(IDataController controller, IDataMapper mapper, IBaseContext context, IDataRequestInfo request)
+        protected internal virtual void OnCompletion(IDataController controller, IDataMapper mapper, IBaseContext context, ICorrelationInfo request)
         {
             logger.LogDebug($"Completed: DataController: {controller.GetType().Name}, DataMapper: {mapper.GetType().Name}, Context: {(context == null ? null : context.GetType().Name)}, CorrelationId: {request.CorrelationId}, Function: {(context == null ? (object)null : context.ControllerFunction)}, User: {request.RequestorName}");
         }
@@ -147,7 +147,7 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Controller
             return true;
         }
 
-        protected internal virtual IDataResponseInfo InitializeResponse(IDataResponseInfo response, IDataRequestInfo request)
+        protected internal virtual IDataResponseInfo InitializeResponse(IDataResponseInfo response, ICorrelationInfo request)
         {
             if (response == null)
                 response = new DataResponseInfo();

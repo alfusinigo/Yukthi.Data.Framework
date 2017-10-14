@@ -2,13 +2,13 @@
 
 namespace Yc.Sql.Entity.Data.Core.Framework.Model.Controller
 {
-    public interface IDataRequestInfo
+    public interface ICorrelationInfo
     {
         string RequestorName { get; set; }
         string CorrelationId { get; set; }
     }
 
-    public class DataRequestInfo : IDataRequestInfo
+    public class CorrelationInfo : ICorrelationInfo
     {
         public string RequestorName { get; set; }
         public string CorrelationId { get; set; }

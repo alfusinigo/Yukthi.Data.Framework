@@ -7,12 +7,12 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Controller
 {
     public interface IDataController
     {
-        IDataResponseInfo SubmitChanges<T>(T entity, IDataRequestInfo requestInfo) where T : IBaseContext;
+        IDataResponseInfo SubmitChanges<T>(T entity, ICorrelationInfo requestInfo) where T : IBaseContext;
 
-        IDataResponseInfo SubmitChanges<T>(List<T> entities, IDataRequestInfo requestInfo) where T : IBaseContext;
+        IDataResponseInfo SubmitChanges<T>(List<T> entities, ICorrelationInfo requestInfo) where T : IBaseContext;
 
-        IDataResponseInfo GetEntity<T>(IBaseContext entity, IDataRequestInfo requestInfo);
+        IDataResponseInfo GetEntity<T>(IBaseContext entity, ICorrelationInfo requestInfo);
 
-        IDataResponseInfo GetEntities<T>(IBaseContext entity, IDataRequestInfo requestInfo);
+        IDataResponseInfo GetEntities<T>(IBaseContext entity, ICorrelationInfo requestInfo);
     }
 }
