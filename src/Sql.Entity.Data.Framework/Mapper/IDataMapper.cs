@@ -17,8 +17,6 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Mapper
         List<T> GetDataItems<T>(IBaseContext context);
         T GetDataItem<T>(IBaseContext context);
 
-        IDataReader GetReader(IBaseContext context);
-
         dynamic SubmitData(IBaseContext context);
         void SubmitData(IEnumerable<IBaseContext> entities);
 

@@ -3,17 +3,18 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>2.0.6</Version>
+    <Version>2.0.7</Version>
     <AssemblyName>Yc.Sql.Entity.Data.Core.Framework</AssemblyName>
     <RootNamespace>Yc.Sql.Entity.Data.Framework</RootNamespace>
     <PackageId>Yc.Sql.Entity.Data.Core.Framework</PackageId>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <Authors>Jaganathan,Alfus Inigo</Authors>
     <Company>YukthiCorp</Company>
-    <Description>Wonderful solution for customized data access which supports SqlServer and .Net Core 2.0 framework. It includes features like automaticdata binding, automatic parameter binding, distributed caching, etc.
+    <Description>Wonderful ORM solution for customized data access which supports SqlServer and .Net Core 2.0 framework. It includes features like automaticdata binding, automatic parameter binding, distributed caching, etc.
+Source Code: https://github.com/alfusinigo/Yukthi.Data.Framework
 API implementation available @https://github.com/alfusinigo/Yukthi.Data.Framework.Api.Sample</Description>
     <Copyright>Copyright 2017 @YukthiCorp</Copyright>
-    <PackageReleaseNotes>Additional service configuration overloads adding more flexibility to inject configuration items</PackageReleaseNotes>
+    <PackageReleaseNotes>CorrelationInfo made optional</PackageReleaseNotes>
     <PackageTags>Sql Entity Data Core SqlFramework .NetCore</PackageTags>
     <Product>Yc.Sql.Entity.Data.Core.Framework</Product>
   </PropertyGroup>

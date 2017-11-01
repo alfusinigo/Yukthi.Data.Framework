@@ -10,7 +10,7 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Model.Controller
 
     public class CorrelationInfo : ICorrelationInfo
     {
-        public string RequestorName { get; set; }
-        public string CorrelationId { get; set; }
+        public string RequestorName { get; set; } = "N/A";
+        public string CorrelationId { get; set; } = "N/A";
     }
 }

@@ -71,7 +71,7 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Mapper
                     CheckSetAndReturnValue<T>(MapperBase_OnCallForGetEntity<T>, context, DeserialzeEntity<T>);
         }
 
-        public IDataReader GetReader(IBaseContext context)
+        internal IDataReader GetReader(IBaseContext context)
         {
             SetFunctionSpecificEntityMappings(context);
             switch (context.CommandType)
@@ -212,7 +212,7 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Mapper
             return (T)regularEntity;
         }
 
-        public static void AddProperty(ExpandoObject expando, string propertyName, object propertyValue, Type propertyType)
+        internal static void AddProperty(ExpandoObject expando, string propertyName, object propertyValue, Type propertyType)
         {
             var expandoDict = expando as IDictionary<string, object>;
 

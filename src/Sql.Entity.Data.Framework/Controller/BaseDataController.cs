@@ -28,70 +28,90 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Controller
             this.logger = logger;
         }
 
-        public virtual IDataResponseInfo SubmitChanges<T>(T entity, ICorrelationInfo requestInfo) where T : IBaseContext
+        public IDataResponseInfo SubmitChanges<T>(T entity) where T : IBaseContext
+        {
+            return SubmitChanges(entity, new CorrelationInfo());
+        }
+
+        public IDataResponseInfo SubmitChanges<T>(List<T> entities) where T : IBaseContext
+        {
+            return SubmitChanges(entities, new CorrelationInfo());
+        }
+
+        public IDataResponseInfo GetEntity<T>(IBaseContext entity)
+        {
+            return GetEntity<T>(entity, new CorrelationInfo());
+        }
+
+        public IDataResponseInfo GetEntities<T>(IBaseContext entity)
+        {
+            return GetEntities<T>(entity, new CorrelationInfo());
+        }
+
+        public virtual IDataResponseInfo SubmitChanges<T>(T entity, ICorrelationInfo correlationInfo) where T : IBaseContext
         {
             var responseInfo = new DataResponseInfo();
             try
             {
-                OnStart(this, dataMapper, entity, requestInfo, responseInfo);
+                OnStart(this, dataMapper, entity, correlationInfo, responseInfo);
                 responseInfo.Data = dataMapper.SubmitData(entity);
-                OnCompletion(this, dataMapper, entity, requestInfo);
+                OnCompletion(this, dataMapper, entity, correlationInfo);
             }
             catch (Exception exception)
             {
-                OnException(this, dataMapper, entity, requestInfo, responseInfo, exception);
+                OnException(this, dataMapper, entity, correlationInfo, responseInfo, exception);
             }
             return responseInfo;
         }
 
-        public virtual IDataResponseInfo SubmitChanges<T>(List<T> entities, ICorrelationInfo requestInfo) where T : IBaseContext
+        public virtual IDataResponseInfo SubmitChanges<T>(List<T> entities, ICorrelationInfo correlationInfo) where T : IBaseContext
         {
             var responseInfo = new DataResponseInfo();
             try
             {
-                OnStart(this, dataMapper, entities[0], requestInfo, responseInfo);
+                OnStart(this, dataMapper, entities[0], correlationInfo, responseInfo);
                 var castedData = new List<IBaseContext>();
                 if (entities != null)
                     castedData.AddRange(entities.Cast<IBaseContext>());
                 dataMapper.SubmitData(castedData);
-                OnCompletion(this, dataMapper, entities[0], requestInfo);
+                OnCompletion(this, dataMapper, entities[0], correlationInfo);
                 responseInfo.Data = true;
             }
             catch (Exception exception)
             {
-                OnException(this, dataMapper, entities[0], requestInfo, responseInfo, exception);
+                OnException(this, dataMapper, entities[0], correlationInfo, responseInfo, exception);
             }
             return responseInfo;
         }
 
-        public virtual IDataResponseInfo GetEntity<T>(IBaseContext entity, ICorrelationInfo requestInfo)
+        public virtual IDataResponseInfo GetEntity<T>(IBaseContext entity, ICorrelationInfo correlationInfo)
         {
             var responseInfo = new DataResponseInfo();
             try
             {
-                OnStart(this, dataMapper, entity, requestInfo, responseInfo);
+                OnStart(this, dataMapper, entity, correlationInfo, responseInfo);
                 responseInfo.Data = dataMapper.GetDataItem<T>(entity);
-                OnCompletion(this, dataMapper, entity, requestInfo);
+                OnCompletion(this, dataMapper, entity, correlationInfo);
             }
             catch (Exception exception)
             {
-                OnException(this, dataMapper, entity, requestInfo, responseInfo, exception);
+                OnException(this, dataMapper, entity, correlationInfo, responseInfo, exception);
             }
             return responseInfo;
         }
 
-        public IDataResponseInfo GetEntities<T>(IBaseContext entity, ICorrelationInfo requestInfo)
+        public IDataResponseInfo GetEntities<T>(IBaseContext entity, ICorrelationInfo correlationInfo)
         {
             var responseInfo = new DataResponseInfo();
             try
             {
-                OnStart(this, dataMapper, entity, requestInfo, responseInfo);
+                OnStart(this, dataMapper, entity, correlationInfo, responseInfo);
                 responseInfo.Data = GetCastedCollection<T>(dataMapper.GetDataItems<T>(entity));
-                OnCompletion(this, dataMapper, entity, requestInfo);
+                OnCompletion(this, dataMapper, entity, correlationInfo);
             }
             catch (Exception exception)
             {
-                OnException(this, dataMapper, entity, requestInfo, responseInfo, exception);
+                OnException(this, dataMapper, entity, correlationInfo, responseInfo, exception);
             }
             return responseInfo;
         }
@@ -105,12 +125,12 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Controller
             return castedData;
         }
 
-        protected internal virtual void OnCustomMessage(IDataController controller, IDataMapper mapper, IBaseContext context, ICorrelationInfo request, string message)
+        protected internal virtual void OnCustomMessage(IDataController controller, IDataMapper mapper, IBaseContext context, ICorrelationInfo correlationInfo, string message)
         {
-            logger.LogDebug($"Message: DataController: {controller.GetType().Name}, DataMapper: {mapper.GetType().Name}, Context: {(context == null ? null : context.GetType().Name)}, CorrelationId: {request.CorrelationId}, Function: {(context == null ? (object)null : context.ControllerFunction)}, User: {request.RequestorName}\n{message}");
+            logger.LogDebug($"Message: DataController: {controller.GetType().Name}, DataMapper: {mapper.GetType().Name}, Context: {context?.GetType().Name}, CorrelationId: {correlationInfo?.CorrelationId}, Function: {context?.ControllerFunction}, User: {correlationInfo?.RequestorName}\n{message}");
         }
 
-        protected internal virtual void OnException(IDataController controller, IDataMapper mapper, IBaseContext context, ICorrelationInfo request, IDataResponseInfo response, Exception exception)
+        protected internal virtual void OnException(IDataController controller, IDataMapper mapper, IBaseContext context, ICorrelationInfo correlationInfo, IDataResponseInfo response, Exception exception)
         {
             response.Status = Status.Failure;
 
@@ -121,19 +141,19 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Controller
             else
             {
                 response.Message = response.Message.Insert(0, exception.ToString());
-                logger.LogError($"Exception: DataController: {controller.GetType().Name}, DataMapper: {mapper.GetType().Name}, Context: {(context == null ? null : context.GetType().Name)}, CorrelationId: {(context == null ? (object)null : context.ControllerFunction)}, Function: {request.CorrelationId}, User: {request.RequestorName}\n{exception}", exception);
+                logger.LogError($"Exception: DataController: {controller.GetType().Name}, DataMapper: {mapper.GetType().Name}, Context: {context?.GetType().Name}, Function: {context?.ControllerFunction}, CorrelationId: {correlationInfo?.CorrelationId}, User: {correlationInfo?.RequestorName}\n{exception}", exception);
             }
         }
 
-        protected internal virtual void OnStart(IDataController controller, IDataMapper mapper, IBaseContext context, ICorrelationInfo request, IDataResponseInfo response)
+        protected internal virtual void OnStart(IDataController controller, IDataMapper mapper, IBaseContext context, ICorrelationInfo correlationInfo, IDataResponseInfo response)
         {
-            InitializeResponse(response, request);
-            logger.LogDebug($"Started: DataController: {controller.GetType().Name}, DataMapper: {mapper.GetType().Name}, Context: {(context == null ? null : context.GetType().Name)}, CorrelationId: {request.CorrelationId}, Function: {(context == null ? (object)null : context.ControllerFunction)}, User: {request.RequestorName}");
+            InitializeResponse(response, correlationInfo);
+            logger.LogDebug($"Started: DataController: {controller.GetType().Name}, DataMapper: {mapper.GetType().Name}, Context: {context?.GetType().Name}, CorrelationId: {correlationInfo?.CorrelationId}, Function: {context?.ControllerFunction}, User: {correlationInfo?.RequestorName}");
         }
 
-        protected internal virtual void OnCompletion(IDataController controller, IDataMapper mapper, IBaseContext context, ICorrelationInfo request)
+        protected internal virtual void OnCompletion(IDataController controller, IDataMapper mapper, IBaseContext context, ICorrelationInfo correlationInfo)
         {
-            logger.LogDebug($"Completed: DataController: {controller.GetType().Name}, DataMapper: {mapper.GetType().Name}, Context: {(context == null ? null : context.GetType().Name)}, CorrelationId: {request.CorrelationId}, Function: {(context == null ? (object)null : context.ControllerFunction)}, User: {request.RequestorName}");
+            logger.LogDebug($"Completed: DataController: {controller.GetType().Name}, DataMapper: {mapper.GetType().Name}, Context: {context?.GetType().Name}, CorrelationId: {correlationInfo?.CorrelationId}, Function: {context?.ControllerFunction}, User: {correlationInfo?.RequestorName}");
         }
 
         protected internal virtual bool VerifyResponseStatus(IDataResponseInfo response, bool throwException)
@@ -147,12 +167,12 @@ namespace Yc.Sql.Entity.Data.Core.Framework.Controller
             return true;
         }
 
-        protected internal virtual IDataResponseInfo InitializeResponse(IDataResponseInfo response, ICorrelationInfo request)
+        protected internal virtual IDataResponseInfo InitializeResponse(IDataResponseInfo response, ICorrelationInfo correlationInfo)
         {
             if (response == null)
                 response = new DataResponseInfo();
 
-            response.CorrelationId = request.CorrelationId;
+            response.CorrelationId = correlationInfo?.CorrelationId;
             response.HostName = Environment.MachineName;
             return response;
         }
